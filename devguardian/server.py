@@ -17,6 +17,9 @@ from devguardian.tools.git_ops import (
     git_log, git_diff, git_branch, git_checkout,
     git_stash, git_reset, git_remote, smart_commit,
 )
+from devguardian.agents.engineer import create_engineer_graph
+from devguardian.utils.memory import init_db
+from langchain_core.messages import HumanMessage
 
 # ---------------------------------------------------------------------------
 # Server instance
@@ -266,6 +269,23 @@ async def list_tools() -> list[types.Tool]:
                 "required": ["repo_path"],
             },
         ),
+        types.Tool(
+            name="autonomous_engineer",
+            description=(
+                "🚀 STATEFUL AGENT: A LangGraph-powered autonomous coding agent. "
+                "It can plan, use tools in loops, and verify its own work. "
+                "Use this for complex debugging or refactoring tasks."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "task":         {"type": "string", "description": "The coding task or bug description (required)."},
+                    "project_path": {"type": "string", "description": "Absolute path to the project (required)."},
+                    "thread_id":    {"type": "string", "description": "Conversation ID for state persistence (optional)."},
+                },
+                "required": ["task", "project_path"],
+            },
+        ),
     ]
 
 
@@ -363,6 +383,32 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             arguments["repo_path"],
             arguments.get("extra_context", ""),
         ))
+    elif name == "autonomous_engineer":
+        # Initialize graph
+        graph = create_engineer_graph()
+        
+        # Prepare state
+        task = arguments["task"]
+        path = arguments["project_path"]
+        thread_id = arguments.get("thread_id", "default_thread")
+        
+        # Execute graph (async)
+        # Note: In a real MCP server, we might want to stream progress, 
+        # but for now we run to completion for the tool response.
+        initial_state = {
+            "messages": [HumanMessage(content=task)],
+            "project_path": path,
+            "task_description": task,
+            "is_resolved": False
+        }
+        
+        # Use memory if we want persistence (configured inside graph compile usually)
+        # For now, we run the compiled graph
+        result = await graph.ainvoke(initial_state)
+        
+        # Extract the final message from the graph
+        final_msg = result["messages"][-1].content
+        return text(f"🛡️ DevGuardian Autonomous Engineer Report:\n\n{final_msg}")
 
     else:
         return text(f"❌ Unknown tool: '{name}'")
@@ -377,6 +423,9 @@ def main():
 
 
 async def _run():
+    # Initialize SQLite memory before starting the server
+    await init_db()
+    
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())
 

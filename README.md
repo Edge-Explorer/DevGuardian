@@ -27,6 +27,7 @@
 | `git_reset` | Reset HEAD (soft, mixed, hard) |
 | `git_remote` | List configured remotes |
 | ⭐ `smart_commit` | **AI reads your diff → generates commit message → commits automatically!** |
+| 🚀 `autonomous_engineer` | **Stateful LangGraph agent that can plan, execute tools in loops, and verify work!** |
 
 ---
 
@@ -104,6 +105,10 @@ Add to `%APPDATA%\Claude\claude_desktop_config.json`:
 ### Smart commit
 > "Stage all my changes and commit them"
 → DevGuardian runs `git add .`, reads the diff, Gemini writes the commit message, done!
+
+### Autonomous Engineering
+> "Identify the fix for the AttributeError in my project and apply it."
+→ DevGuardian starts a LangGraph loop, analyzes the codebase/error, performs the fix, and verifies it.
 
 ### Generate code
 > "Generate a Python function that validates an email address with regex"
