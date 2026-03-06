@@ -5,6 +5,17 @@ Exposes all DevGuardian tools over the Model Context Protocol so that
 any MCP-compatible host (Antigravity, Claude Desktop, etc.) can call them.
 """
 
+import sys
+import io
+
+# Force UTF-8 on stdout/stderr so emoji responses never cause UnicodeEncodeError
+# on Windows (which defaults to cp1252). This MUST happen before any imports
+# that might trigger output.
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 import asyncio
 from functools import partial
 from mcp.server import Server
