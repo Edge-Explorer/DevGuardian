@@ -9,6 +9,9 @@ import asyncio
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from devguardian.tools.debugger import debug_error
 from devguardian.tools.code_helper import explain_code, review_code, generate_code, improve_code
