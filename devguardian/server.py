@@ -6,12 +6,19 @@ any MCP-compatible host (Antigravity, Claude Desktop, etc.) can call them.
 """
 
 import asyncio
+from functools import partial
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+async def _run_sync(func, *args, **kwargs):
+    """Run a blocking (sync) function in a thread pool so it never blocks the event loop."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, partial(func, *args, **kwargs))
 
 # Lightweight tool imports (fast to load)
 from devguardian.tools.debugger import debug_error
@@ -301,30 +308,34 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
     def text(result: str) -> list[types.TextContent]:
         return [types.TextContent(type="text", text=result)]
 
-    # ── Debugging ─────────────────────────────────────────────────────────
+    # ── Debugging (run in thread pool — Gemini call is blocking) ───────────────
     if name == "debug_error":
-        return text(debug_error(
+        return text(await _run_sync(
+            debug_error,
             error_message=arguments["error_message"],
             stack_trace=arguments.get("stack_trace", ""),
             code_snippet=arguments.get("code_snippet", ""),
             language=arguments.get("language", ""),
         ))
 
-    # ── Code Helper ───────────────────────────────────────────────────────
+    # ── Code Helper (run in thread pool — Gemini calls are blocking) ─────────
     elif name == "explain_code":
-        return text(explain_code(
+        return text(await _run_sync(
+            explain_code,
             code=arguments["code"],
             question=arguments.get("question", ""),
             language=arguments.get("language", ""),
         ))
     elif name == "review_code":
-        return text(review_code(
+        return text(await _run_sync(
+            review_code,
             code=arguments["code"],
             language=arguments.get("language", ""),
             focus=arguments.get("focus", ""),
         ))
     elif name == "generate_code":
-        return text(generate_code(
+        return text(await _run_sync(
+            generate_code,
             description=arguments["description"],
             language=arguments.get("language", "Python"),
             context_path=arguments.get("context_path", ""),
@@ -336,53 +347,59 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             instructions=arguments.get("instructions", ""),
         ))
 
-    # ── Git Operations ────────────────────────────────────────────────────
+    # ── Git Operations (all run in thread pool — never block the event loop) ────
     elif name == "git_status":
-        return text(git_status(arguments["repo_path"]))
+        return text(await _run_sync(git_status, arguments["repo_path"]))
     elif name == "git_add":
-        return text(git_add(arguments["repo_path"], arguments.get("files", ".")))
+        return text(await _run_sync(git_add, arguments["repo_path"], arguments.get("files", ".")))
     elif name == "git_commit":
-        return text(git_commit(arguments["repo_path"], arguments["message"]))
+        return text(await _run_sync(git_commit, arguments["repo_path"], arguments["message"]))
     elif name == "git_push":
-        return text(git_push(
+        return text(await _run_sync(
+            git_push,
             arguments["repo_path"],
             arguments.get("remote", "origin"),
             arguments.get("branch", ""),
         ))
     elif name == "git_pull":
-        return text(git_pull(
+        return text(await _run_sync(
+            git_pull,
             arguments["repo_path"],
             arguments.get("remote", "origin"),
             arguments.get("branch", ""),
         ))
     elif name == "git_log":
-        return text(git_log(arguments["repo_path"], arguments.get("count", 10)))
+        return text(await _run_sync(git_log, arguments["repo_path"], arguments.get("count", 10)))
     elif name == "git_diff":
-        return text(git_diff(arguments["repo_path"], arguments.get("staged", False)))
+        return text(await _run_sync(git_diff, arguments["repo_path"], arguments.get("staged", False)))
     elif name == "git_branch":
-        return text(git_branch(arguments["repo_path"]))
+        return text(await _run_sync(git_branch, arguments["repo_path"]))
     elif name == "git_checkout":
-        return text(git_checkout(
+        return text(await _run_sync(
+            git_checkout,
             arguments["repo_path"],
             arguments["branch_name"],
             arguments.get("create", False),
         ))
     elif name == "git_stash":
-        return text(git_stash(
+        return text(await _run_sync(
+            git_stash,
             arguments["repo_path"],
             arguments.get("action", "push"),
             arguments.get("message", ""),
         ))
     elif name == "git_reset":
-        return text(git_reset(
+        return text(await _run_sync(
+            git_reset,
             arguments["repo_path"],
             arguments.get("mode", "soft"),
             arguments.get("target", "HEAD~1"),
         ))
     elif name == "git_remote":
-        return text(git_remote(arguments["repo_path"]))
+        return text(await _run_sync(git_remote, arguments["repo_path"]))
     elif name == "smart_commit":
-        return text(smart_commit(
+        return text(await _run_sync(
+            smart_commit,
             arguments["repo_path"],
             arguments.get("extra_context", ""),
         ))

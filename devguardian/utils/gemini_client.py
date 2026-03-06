@@ -7,9 +7,7 @@ This keeps server startup near-instant so the MCP initialize handshake never tim
 """
 
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
+# Note: load_dotenv() is called once by server.py at startup — no need to repeat it here.
 
 # ---------------------------------------------------------------------------
 # Lazy client — created on first call to ask_gemini()

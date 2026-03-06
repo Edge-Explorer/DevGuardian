@@ -4,9 +4,13 @@ Includes a 'smart_commit' that uses Gemini to auto-generate commit messages.
 """
 
 import subprocess
+import asyncio
 from pathlib import Path
 
 from devguardian.utils.gemini_client import ask_gemini
+
+# Max seconds to wait for any git command before giving up
+_GIT_TIMEOUT = 30
 
 _GIT_SYSTEM = (
     "You are a Git expert. Generate a concise, professional Git commit message "
@@ -25,6 +29,7 @@ def _run_git(args: list[str], cwd: str) -> tuple[str, str, int]:
     """
     Run a git command in the given directory.
     Returns (stdout, stderr, returncode).
+    Times out after _GIT_TIMEOUT seconds to prevent infinite hangs.
     """
     try:
         result = subprocess.run(
@@ -34,8 +39,11 @@ def _run_git(args: list[str], cwd: str) -> tuple[str, str, int]:
             text=True,
             encoding="utf-8",
             errors="replace",
+            timeout=_GIT_TIMEOUT,
         )
         return result.stdout.strip(), result.stderr.strip(), result.returncode
+    except subprocess.TimeoutExpired:
+        return "", f"⏰ Git command timed out after {_GIT_TIMEOUT}s. Is the repo on a slow network drive or waiting for credentials?", 1
     except FileNotFoundError:
         return "", "Git is not installed or not in PATH.", 1
     except Exception as exc:
