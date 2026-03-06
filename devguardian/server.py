@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Lightweight tool imports (fast to load)
 from devguardian.tools.debugger import debug_error
 from devguardian.tools.code_helper import explain_code, review_code, generate_code, improve_code
 from devguardian.tools.git_ops import (
@@ -20,9 +21,8 @@ from devguardian.tools.git_ops import (
     git_log, git_diff, git_branch, git_checkout,
     git_stash, git_reset, git_remote, smart_commit,
 )
-from devguardian.agents.engineer import create_engineer_graph
-from devguardian.utils.memory import init_db
-from langchain_core.messages import HumanMessage
+# NOTE: LangGraph / LangChain imports are intentionally lazy (see autonomous_engineer handler)
+# This keeps the server startup instant and avoids MCP initialize timeout.
 
 # ---------------------------------------------------------------------------
 # Server instance
@@ -387,31 +387,31 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             arguments.get("extra_context", ""),
         ))
     elif name == "autonomous_engineer":
+        # Lazy imports — only loaded when this tool is actually called
+        from devguardian.agents.engineer import create_engineer_graph
+        from devguardian.utils.memory import init_db
+        from langchain_core.messages import HumanMessage
+
+        # Ensure DB is ready before running the agent
+        await init_db()
+
         # Initialize graph
         graph = create_engineer_graph()
-        
+
         # Prepare state
         task = arguments["task"]
         path = arguments["project_path"]
-        thread_id = arguments.get("thread_id", "default_thread")
-        
-        # Execute graph (async)
-        # Note: In a real MCP server, we might want to stream progress, 
-        # but for now we run to completion for the tool response.
+
         initial_state = {
             "messages": [HumanMessage(content=task)],
             "project_path": path,
             "task_description": task,
             "is_resolved": False
         }
-        
-        # Use memory if we want persistence (configured inside graph compile usually)
-        # For now, we run the compiled graph
+
         result = await graph.ainvoke(initial_state)
-        
-        # Extract the final message from the graph
         final_msg = result["messages"][-1].content
-        return text(f"🛡️ DevGuardian Autonomous Engineer Report:\n\n{final_msg}")
+        return text(f"DevGuardian Autonomous Engineer Report:\n\n{final_msg}")
 
     else:
         return text(f"❌ Unknown tool: '{name}'")
@@ -426,9 +426,7 @@ def main():
 
 
 async def _run():
-    # Initialize SQLite memory before starting the server
-    await init_db()
-    
+    # Start the server immediately — no heavy init at startup
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())
 
