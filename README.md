@@ -143,4 +143,4 @@ DevGuardian/
 
 ---
 
-*Built with ❤️ using Gemini 2.0 Flash + MCP SDK + UV*
+*Built with ❤️ by **Karan** using Gemini 2.0 Flash + MCP SDK + UV*
