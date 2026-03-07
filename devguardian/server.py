@@ -18,10 +18,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+# _run_sync: used ONLY for blocking Gemini AI calls (subprocess git ops are now native async)
 async def _run_sync(func, *args, **kwargs):
     """
     Run a blocking (sync) function in a thread pool without blocking the event loop.
-    Uses asyncio.to_thread() — the correct Python 3.9+ API. No explicit loop access needed.
+    Uses asyncio.to_thread() — the correct Python 3.9+ API.
+    Only needed for synchronous Gemini API calls in code_helper/debugger.
     """
     return await asyncio.to_thread(func, *args, **kwargs)
 
@@ -346,65 +348,60 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             context_path=arguments.get("context_path", ""),
         ))
     elif name == "improve_code":
-        return text(improve_code(
+        return text(await _run_sync(
+            improve_code,
             code=arguments["code"],
             language=arguments.get("language", ""),
             instructions=arguments.get("instructions", ""),
         ))
 
-    # ── Git Operations (all run in thread pool — never block the event loop) ────
+    # ── Git Operations (all NATIVE ASYNC via asyncio.create_subprocess_exec) ────
     elif name == "git_status":
-        return text(await _run_sync(git_status, arguments["repo_path"]))
+        return text(await git_status(arguments["repo_path"]))
     elif name == "git_add":
-        return text(await _run_sync(git_add, arguments["repo_path"], arguments.get("files", ".")))
+        return text(await git_add(arguments["repo_path"], arguments.get("files", ".")))
     elif name == "git_commit":
-        return text(await _run_sync(git_commit, arguments["repo_path"], arguments["message"]))
+        return text(await git_commit(arguments["repo_path"], arguments["message"]))
     elif name == "git_push":
-        return text(await _run_sync(
-            git_push,
+        return text(await git_push(
             arguments["repo_path"],
             arguments.get("remote", "origin"),
             arguments.get("branch", ""),
         ))
     elif name == "git_pull":
-        return text(await _run_sync(
-            git_pull,
+        return text(await git_pull(
             arguments["repo_path"],
             arguments.get("remote", "origin"),
             arguments.get("branch", ""),
         ))
     elif name == "git_log":
-        return text(await _run_sync(git_log, arguments["repo_path"], arguments.get("count", 10)))
+        return text(await git_log(arguments["repo_path"], arguments.get("count", 10)))
     elif name == "git_diff":
-        return text(await _run_sync(git_diff, arguments["repo_path"], arguments.get("staged", False)))
+        return text(await git_diff(arguments["repo_path"], arguments.get("staged", False)))
     elif name == "git_branch":
-        return text(await _run_sync(git_branch, arguments["repo_path"]))
+        return text(await git_branch(arguments["repo_path"]))
     elif name == "git_checkout":
-        return text(await _run_sync(
-            git_checkout,
+        return text(await git_checkout(
             arguments["repo_path"],
             arguments["branch_name"],
             arguments.get("create", False),
         ))
     elif name == "git_stash":
-        return text(await _run_sync(
-            git_stash,
+        return text(await git_stash(
             arguments["repo_path"],
             arguments.get("action", "push"),
             arguments.get("message", ""),
         ))
     elif name == "git_reset":
-        return text(await _run_sync(
-            git_reset,
+        return text(await git_reset(
             arguments["repo_path"],
             arguments.get("mode", "soft"),
             arguments.get("target", "HEAD~1"),
         ))
     elif name == "git_remote":
-        return text(await _run_sync(git_remote, arguments["repo_path"]))
+        return text(await git_remote(arguments["repo_path"]))
     elif name == "smart_commit":
-        return text(await _run_sync(
-            smart_commit,
+        return text(await smart_commit(
             arguments["repo_path"],
             arguments.get("extra_context", ""),
         ))
