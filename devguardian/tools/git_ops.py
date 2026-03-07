@@ -10,6 +10,7 @@ the event loop for that duration is completely acceptable for an MCP server.
 
 import subprocess
 from devguardian.utils.gemini_client import ask_gemini
+from devguardian.utils.security import pre_push_security_gate, format_env_validation_report
 
 _GIT_TIMEOUT = 30  # seconds
 
@@ -85,6 +86,16 @@ def git_commit(repo_path: str, message: str) -> str:
 
 
 def git_push(repo_path: str, remote: str = "origin", branch: str = "") -> str:
+    """Push commits to the remote — runs security gate first."""
+    # Security gate: block push if secrets or .gitignore issues found
+    safe, security_report = pre_push_security_gate(repo_path)
+    if not safe:
+        return (
+            f"🚨 PUSH BLOCKED BY DEVGUARDIAN SECURITY GATE\n\n"
+            f"{security_report}\n\n"
+            f"Fix the issues above, then try pushing again."
+        )
+
     args = ["push", remote]
     if branch:
         args.append(branch)
@@ -159,16 +170,28 @@ def git_remote(repo_path: str) -> str:
 # ---------------------------------------------------------------------------
 def smart_commit(repo_path: str, extra_context: str = "") -> str:
     """
-    1. git diff --staged to see what changed.
-    2. Gemini generates a Conventional Commit message.
-    3. Commits with that message.
+    1. Runs `git diff --staged` to see what's changed.
+    2. Scans staged files for leaked secrets — blocks if found.
+    3. Sends the diff to Gemini to generate a Conventional Commit message.
+    4. Commits automatically with that message.
     """
+    # Step 1: Check for staged changes
     diff_out, diff_err, diff_code = _run_git(["diff", "--staged"], repo_path)
     if diff_code != 0:
         return f"Could not get staged diff: {diff_err}"
     if not diff_out:
-        return "No staged changes found. Run git_add first, then try smart_commit."
+        return "No staged changes found. Run git_add first, then try smart_commit again."
 
+    # Step 2: Security scan on staged content before committing
+    safe, security_report = pre_push_security_gate(repo_path)
+    if not safe:
+        return (
+            f"🚨 COMMIT BLOCKED BY DEVGUARDIAN SECURITY GATE\n\n"
+            f"{security_report}\n\n"
+            f"Fix the issues above, then try committing again."
+        )
+
+    # Step 3: Ask Gemini for a commit message
     context_hint = f"\n\nAdditional context: {extra_context}" if extra_context else ""
     prompt = (
         f"Generate a Git commit message for the following diff:{context_hint}\n\n"
@@ -179,6 +202,7 @@ def smart_commit(repo_path: str, extra_context: str = "") -> str:
     if commit_message.startswith("git commit"):
         commit_message = commit_message.split("-m", 1)[-1].strip().strip('"').strip("'")
 
+    # Step 4: Commit
     out, err, code = _run_git(["commit", "-m", commit_message], repo_path)
     if code == 0:
         return f"Smart commit successful!\n\nGenerated message:\n  {commit_message}\n\n{out}"

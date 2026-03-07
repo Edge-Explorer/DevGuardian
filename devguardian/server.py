@@ -35,6 +35,7 @@ from devguardian.tools.git_ops import (
     git_log, git_diff, git_branch, git_checkout,
     git_stash, git_reset, git_remote, smart_commit,
 )
+from devguardian.utils.security import format_env_validation_report, pre_push_security_gate
 # NOTE: LangGraph / LangChain imports are intentionally lazy (see autonomous_engineer handler)
 # This keeps the server startup instant and avoids MCP initialize timeout.
 
@@ -142,6 +143,38 @@ async def list_tools() -> list[types.Tool]:
                     "project_path": {"type": "string", "description": "Absolute path to project root for full codebase context (optional)."},
                 },
                 "required": ["code"],
+            },
+        ),
+
+        # ── Security Tools ────────────────────────────────────────────────
+        types.Tool(
+            name="validate_env",
+            description=(
+                "Validate a .env file's format and report any issues. "
+                "Shows key names ONLY — never exposes actual secret values. "
+                "Use this before editing .env to understand what's in it safely."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "env_path": {"type": "string", "description": "Absolute path to the .env file (required)."},
+                },
+                "required": ["env_path"],
+            },
+        ),
+        types.Tool(
+            name="security_scan",
+            description=(
+                "⭐ SECURITY GATE: Scan a repo for credential leaks and .gitignore gaps BEFORE pushing. "
+                "Checks all staged files for 20+ types of leaked secrets (API keys, tokens, passwords). "
+                "Verifies .gitignore covers sensitive patterns. Run this before every git push."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "repo_path": {"type": "string", "description": "Absolute path to the git repo (required)."},
+                },
+                "required": ["repo_path"],
             },
         ),
 
@@ -347,6 +380,14 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             language=arguments.get("language", ""),
             project_path=arguments.get("project_path", ""),
         ))
+
+    # ── Security Tools ────────────────────────────────────────────────────────
+    elif name == "validate_env":
+        return text(format_env_validation_report(arguments["env_path"]))
+    elif name == "security_scan":
+        # Returns (safe, report) - we just show the report
+        _, report = pre_push_security_gate(arguments["repo_path"])
+        return text(report)
 
     # ── Code Helper ───────────────────────────────────────────────────────────
     elif name == "explain_code":
