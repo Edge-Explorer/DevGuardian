@@ -28,7 +28,7 @@ load_dotenv()
 
 async def _run_sync(func, *args, **kwargs):
     """Run a blocking (sync) function in a thread pool so it never blocks the event loop."""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()   # get_running_loop() is correct in Python 3.10+
     return await loop.run_in_executor(None, partial(func, *args, **kwargs))
 
 # Lightweight tool imports (fast to load)
