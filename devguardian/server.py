@@ -53,6 +53,7 @@ app = Server("devguardian")
 @app.list_tools()
 async def list_tools() -> list[types.Tool]:
     return [
+        # AI Coding Assistance
         types.Tool(
             name="debug_error",
             description="Analyze an error and get a fix (Gemini 2.0 Flash).",
@@ -122,6 +123,8 @@ async def list_tools() -> list[types.Tool]:
                 "required": ["code"],
             },
         ),
+
+        # Security
         types.Tool(
             name="validate_env",
             description="Validate .env format (never leaks values).",
@@ -144,6 +147,8 @@ async def list_tools() -> list[types.Tool]:
                 "required": ["repo_path"],
             },
         ),
+
+        # Git Operations
         types.Tool(
             name="git_status",
             description="Git status.",
@@ -191,6 +196,100 @@ async def list_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
+            name="git_pull",
+            description="Git pull.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "repo_path": {"type": "string"},
+                    "remote": {"type": "string"},
+                    "branch": {"type": "string"},
+                },
+                "required": ["repo_path"],
+            },
+        ),
+        types.Tool(
+            name="git_log",
+            description="Git history.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "repo_path": {"type": "string"},
+                    "count": {"type": "integer"},
+                },
+                "required": ["repo_path"],
+            },
+        ),
+        types.Tool(
+            name="git_diff",
+            description="Git diff.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "repo_path": {"type": "string"},
+                    "staged": {"type": "boolean"},
+                },
+                "required": ["repo_path"],
+            },
+        ),
+        types.Tool(
+            name="git_branch",
+            description="List branches.",
+            inputSchema={
+                "type": "object",
+                "properties": {"repo_path": {"type": "string"}},
+                "required": ["repo_path"],
+            },
+        ),
+        types.Tool(
+            name="git_checkout",
+            description="Git checkout.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "repo_path": {"type": "string"},
+                    "branch_name": {"type": "string"},
+                    "create": {"type": "boolean"},
+                },
+                "required": ["repo_path", "branch_name"],
+            },
+        ),
+        types.Tool(
+            name="git_stash",
+            description="Git stash (push, pop, list).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "repo_path": {"type": "string"},
+                    "action": {"type": "string"},
+                    "message": {"type": "string"},
+                },
+                "required": ["repo_path"],
+            },
+        ),
+        types.Tool(
+            name="git_reset",
+            description="Git reset.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "repo_path": {"type": "string"},
+                    "mode": {"type": "string"},
+                    "target": {"type": "string"},
+                },
+                "required": ["repo_path"],
+            },
+        ),
+        types.Tool(
+            name="git_remote",
+            description="Git remotes.",
+            inputSchema={
+                "type": "object",
+                "properties": {"repo_path": {"type": "string"}},
+                "required": ["repo_path"],
+            },
+        ),
+        types.Tool(
             name="smart_commit",
             description="AI-generated commit message and commit.",
             inputSchema={
@@ -227,7 +326,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         return [types.TextContent(type="text", text=str(result))]
 
     try:
-        # ── AI Tools (Blocking, run in thread pool) ──────────────────────────
+        # ── AI Tools ──────────────────────────────────────────────────────────
         if name == "debug_error":
             return text(await _run_sync(debug_error, **arguments))
         elif name == "explain_code":
@@ -239,39 +338,40 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         elif name == "improve_code":
             return text(await _run_sync(improve_code, **arguments))
         elif name == "smart_commit":
-            # Pass args explicitly to ensure order/types match smart_commit signature
-            return text(await _run_sync(
-                smart_commit,
-                repo_path=arguments["repo_path"],
-                extra_context=arguments.get("extra_context", "")
-            ))
+            return text(await _run_sync(smart_commit, **arguments))
 
-        # ── Utility & Security Tools (Sync, but fast) ──────────────────────────
+        # ── Security & Git Tools (Sync) ───────────────────────────────────────
         elif name == "validate_env":
             return text(format_env_validation_report(arguments["env_path"]))
         elif name == "security_scan":
             _, report = pre_push_security_gate(arguments["repo_path"])
             return text(report)
-
-        # ── Git Operations (Sync, but ~60ms) ───────────────────────────────
         elif name == "git_status":
             return text(git_status(arguments["repo_path"]))
         elif name == "git_add":
-            return text(git_add(arguments["repo_path"], arguments.get("files", ".")))
+            return text(git_add(**arguments))
         elif name == "git_commit":
-            return text(git_commit(arguments["repo_path"], arguments["message"]))
+            return text(git_commit(**arguments))
         elif name == "git_push":
-            return text(git_push(
-                arguments["repo_path"],
-                arguments.get("remote", "origin"),
-                arguments.get("branch", "")
-            ))
+            return text(git_push(**arguments))
+        elif name == "git_pull":
+            return text(git_pull(**arguments))
         elif name == "git_log":
-            return text(git_log(arguments["repo_path"], arguments.get("count", 10)))
+            return text(git_log(**arguments))
         elif name == "git_diff":
-            return text(git_diff(arguments["repo_path"], arguments.get("staged", False)))
+            return text(git_diff(**arguments))
+        elif name == "git_branch":
+            return text(git_branch(arguments["repo_path"]))
+        elif name == "git_checkout":
+            return text(git_checkout(**arguments))
+        elif name == "git_stash":
+            return text(git_stash(**arguments))
+        elif name == "git_reset":
+            return text(git_reset(**arguments))
+        elif name == "git_remote":
+            return text(git_remote(arguments["repo_path"]))
 
-        # ── Heavy Tools ──────────────────────────────────────────────────────
+        # ── Heavy Tools (Agent) ───────────────────────────────────────────────
         elif name == "autonomous_engineer":
             from devguardian.agents.engineer import create_engineer_graph
             from devguardian.utils.memory import init_db
@@ -290,7 +390,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             return text(result["messages"][-1].content)
 
         else:
-            logger.error(f"Unknown tool called: {name}")
+            logger.error(f"Unknown tool: {name}")
             return text(f"❌ Error: Tool '{name}' not found.")
 
     except Exception as e:
