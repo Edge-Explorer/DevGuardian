@@ -38,6 +38,10 @@ def _run_git(args: list[str], cwd: str) -> tuple[str, str, int]:
         result = subprocess.run(
             ["git"] + args,
             cwd=cwd,
+            stdin=subprocess.DEVNULL,   # CRITICAL: prevents git from inheriting the
+                                        # MCP server's stdin (JSON-RPC pipe). Without
+                                        # this, git blocks waiting for terminal input
+                                        # that never comes, hanging the entire server.
             capture_output=True,
             text=True,
             encoding="utf-8",
