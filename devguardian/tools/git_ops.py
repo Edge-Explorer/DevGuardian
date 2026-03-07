@@ -9,6 +9,7 @@ the event loop for that duration is completely acceptable for an MCP server.
 """
 
 import subprocess
+import shlex
 from devguardian.utils.gemini_client import ask_gemini
 
 _GIT_TIMEOUT = 30  # seconds
@@ -36,7 +37,7 @@ def _run_git(args: list[str], cwd: str) -> tuple[str, str, int]:
     """
     try:
         result = subprocess.run(
-            ["git"] + args,
+            ["git"] + [shlex.quote(a) for a in args],  # sanitize each arg
             cwd=cwd,
             stdin=subprocess.DEVNULL,   # CRITICAL: prevents git from inheriting the
                                         # MCP server's stdin (JSON-RPC pipe). Without
