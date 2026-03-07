@@ -355,53 +355,56 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             instructions=arguments.get("instructions", ""),
         ))
 
-    # ── Git Operations (all NATIVE ASYNC via asyncio.create_subprocess_exec) ────
+    # ── Git Operations ───────────────────────────────────────────────────
+    # subprocess.run() is sync but ~60ms — acceptable to call directly here.
+    # asyncio.create_subprocess_exec() hangs on Windows after MCP imports.
     elif name == "git_status":
-        return text(await git_status(arguments["repo_path"]))
+        return text(git_status(arguments["repo_path"]))
     elif name == "git_add":
-        return text(await git_add(arguments["repo_path"], arguments.get("files", ".")))
+        return text(git_add(arguments["repo_path"], arguments.get("files", ".")))
     elif name == "git_commit":
-        return text(await git_commit(arguments["repo_path"], arguments["message"]))
+        return text(git_commit(arguments["repo_path"], arguments["message"]))
     elif name == "git_push":
-        return text(await git_push(
+        return text(git_push(
             arguments["repo_path"],
             arguments.get("remote", "origin"),
             arguments.get("branch", ""),
         ))
     elif name == "git_pull":
-        return text(await git_pull(
+        return text(git_pull(
             arguments["repo_path"],
             arguments.get("remote", "origin"),
             arguments.get("branch", ""),
         ))
     elif name == "git_log":
-        return text(await git_log(arguments["repo_path"], arguments.get("count", 10)))
+        return text(git_log(arguments["repo_path"], arguments.get("count", 10)))
     elif name == "git_diff":
-        return text(await git_diff(arguments["repo_path"], arguments.get("staged", False)))
+        return text(git_diff(arguments["repo_path"], arguments.get("staged", False)))
     elif name == "git_branch":
-        return text(await git_branch(arguments["repo_path"]))
+        return text(git_branch(arguments["repo_path"]))
     elif name == "git_checkout":
-        return text(await git_checkout(
+        return text(git_checkout(
             arguments["repo_path"],
             arguments["branch_name"],
             arguments.get("create", False),
         ))
     elif name == "git_stash":
-        return text(await git_stash(
+        return text(git_stash(
             arguments["repo_path"],
             arguments.get("action", "push"),
             arguments.get("message", ""),
         ))
     elif name == "git_reset":
-        return text(await git_reset(
+        return text(git_reset(
             arguments["repo_path"],
             arguments.get("mode", "soft"),
             arguments.get("target", "HEAD~1"),
         ))
     elif name == "git_remote":
-        return text(await git_remote(arguments["repo_path"]))
+        return text(git_remote(arguments["repo_path"]))
     elif name == "smart_commit":
-        return text(await smart_commit(
+        return text(await _run_sync(
+            smart_commit,
             arguments["repo_path"],
             arguments.get("extra_context", ""),
         ))
