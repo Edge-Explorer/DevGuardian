@@ -1,8 +1,12 @@
 """
 Debug tool — sends error messages / stack traces to Gemini and returns a fix.
+
+Accepts an optional project_path so Gemini understands the full codebase
+and gives fixes that fit the actual project structure and patterns.
 """
 
 from devguardian.utils.gemini_client import ask_gemini
+from devguardian.utils.file_reader import build_project_context
 
 _SYSTEM = (
     "You are DevGuardian, an elite software debugger. "
@@ -11,6 +15,8 @@ _SYSTEM = (
     "2. Explain it in simple terms.\n"
     "3. Provide the EXACT fix with corrected code.\n"
     "4. Mention any related pitfalls to watch out for.\n"
+    "If a '🛡️ DevGuardian — Project Context' section is provided, use it to "
+    "understand the codebase structure and give a fix that fits the existing patterns. "
     "Be concise, precise, and developer-friendly."
 )
 
@@ -20,6 +26,7 @@ def debug_error(
     stack_trace: str = "",
     code_snippet: str = "",
     language: str = "",
+    project_path: str = "",
 ) -> str:
     """
     Analyse an error and return a structured fix.
@@ -29,15 +36,19 @@ def debug_error(
         stack_trace   : Optional full stack trace.
         code_snippet  : Optional code that caused the error.
         language      : Optional programming language (e.g. "Python", "JavaScript").
+        project_path  : Optional path to project root — gives Gemini full project
+                        context so the fix matches the existing codebase structure.
 
     Returns:
-        Gemini's structured debugging response.
+        Gemini's structured debugging response with root cause and exact fix.
     """
+    ctx = ""
+    if project_path:
+        ctx = f"\n\n{build_project_context(project_path, code=code_snippet)}\n"
+
     lang_hint = f"Language: {language}\n" if language else ""
 
-    prompt = f"""{lang_hint}## Error Message
-{error_message}
-"""
+    prompt = f"{lang_hint}{ctx}\n## Error Message\n{error_message}\n"
 
     if stack_trace:
         prompt += f"\n## Stack Trace\n```\n{stack_trace}\n```\n"

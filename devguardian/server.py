@@ -55,7 +55,8 @@ async def list_tools() -> list[types.Tool]:
             name="debug_error",
             description=(
                 "Analyze an error message, stack trace, or broken code using Gemini 2.0 Flash. "
-                "Returns root cause, explanation, and corrected code."
+                "Returns root cause, explanation, and corrected code. "
+                "Provide project_path for full project-aware debugging."
             ),
             inputSchema={
                 "type": "object",
@@ -64,6 +65,7 @@ async def list_tools() -> list[types.Tool]:
                     "stack_trace":   {"type": "string", "description": "Full stack trace (optional)."},
                     "code_snippet":  {"type": "string", "description": "Code that caused the error (optional)."},
                     "language":      {"type": "string", "description": "Programming language, e.g. Python (optional)."},
+                    "project_path":  {"type": "string", "description": "Absolute path to project root for full codebase context (optional)."},
                 },
                 "required": ["error_message"],
             },
@@ -72,52 +74,72 @@ async def list_tools() -> list[types.Tool]:
         # ── Code Helper ───────────────────────────────────────────────────
         types.Tool(
             name="explain_code",
-            description="Explain what a piece of code does in plain English.",
+            description=(
+                "Explain what a piece of code does in plain English. "
+                "Provide project_path to get a project-aware explanation that references "
+                "the actual modules, patterns, and architecture of your codebase."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "code":     {"type": "string", "description": "The code to explain (required)."},
-                    "question": {"type": "string", "description": "Specific question about the code (optional)."},
-                    "language": {"type": "string", "description": "Programming language (optional)."},
+                    "code":         {"type": "string", "description": "The code to explain (required)."},
+                    "question":     {"type": "string", "description": "Specific question about the code (optional)."},
+                    "language":     {"type": "string", "description": "Programming language (optional)."},
+                    "project_path": {"type": "string", "description": "Absolute path to project root for full codebase context (optional)."},
                 },
                 "required": ["code"],
             },
         ),
         types.Tool(
             name="review_code",
-            description="Perform a code review: find bugs, security issues, performance problems, and style issues.",
+            description=(
+                "Perform a code review: find bugs, security issues, performance problems, and style issues. "
+                "Provide project_path for a project-aware review that also checks consistency "
+                "with the rest of your codebase (naming, patterns, libraries)."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "code":     {"type": "string", "description": "The code to review (required)."},
-                    "language": {"type": "string", "description": "Programming language (optional)."},
-                    "focus":    {"type": "string", "description": "Focus area: security, performance, readability (optional)."},
+                    "code":         {"type": "string", "description": "The code to review (required)."},
+                    "language":     {"type": "string", "description": "Programming language (optional)."},
+                    "focus":        {"type": "string", "description": "Focus area: security, performance, readability (optional)."},
+                    "project_path": {"type": "string", "description": "Absolute path to project root for full codebase context (optional)."},
                 },
                 "required": ["code"],
             },
         ),
         types.Tool(
             name="generate_code",
-            description="Generate clean, well-documented code from a natural language description.",
+            description=(
+                "Generate clean, well-documented code from a natural language description. "
+                "Provide project_path to generate code that perfectly fits your existing "
+                "architecture, libraries, and coding patterns."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "description":   {"type": "string", "description": "What the code should do (required)."},
                     "language":      {"type": "string", "description": "Target language (default: Python)."},
-                    "context_path":  {"type": "string", "description": "Absolute path to project folder for extra context (optional)."},
+                    "project_path":  {"type": "string", "description": "Absolute path to project root for full codebase context (optional)."},
+                    "context_path":  {"type": "string", "description": "Alias for project_path (backwards compatible)."},
                 },
                 "required": ["description"],
             },
         ),
         types.Tool(
             name="improve_code",
-            description="Refactor or improve existing code and explain what was changed.",
+            description=(
+                "Refactor or improve existing code and explain what was changed. "
+                "Provide project_path to ensure improvements stay consistent with "
+                "the rest of your codebase."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "code":         {"type": "string", "description": "The code to improve (required)."},
                     "language":     {"type": "string", "description": "Programming language (optional)."},
                     "instructions": {"type": "string", "description": "Specific improvement goals (optional)."},
+                    "project_path": {"type": "string", "description": "Absolute path to project root for full codebase context (optional)."},
                 },
                 "required": ["code"],
             },
@@ -315,7 +337,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
     def text(result: str) -> list[types.TextContent]:
         return [types.TextContent(type="text", text=result)]
 
-    # ── Debugging (run in thread pool — Gemini call is blocking) ───────────────
+    # ── Debugging ─────────────────────────────────────────────────────────────
     if name == "debug_error":
         return text(await _run_sync(
             debug_error,
@@ -323,15 +345,17 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             stack_trace=arguments.get("stack_trace", ""),
             code_snippet=arguments.get("code_snippet", ""),
             language=arguments.get("language", ""),
+            project_path=arguments.get("project_path", ""),
         ))
 
-    # ── Code Helper (run in thread pool — Gemini calls are blocking) ─────────
+    # ── Code Helper ───────────────────────────────────────────────────────────
     elif name == "explain_code":
         return text(await _run_sync(
             explain_code,
             code=arguments["code"],
             question=arguments.get("question", ""),
             language=arguments.get("language", ""),
+            project_path=arguments.get("project_path", ""),
         ))
     elif name == "review_code":
         return text(await _run_sync(
@@ -339,6 +363,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             code=arguments["code"],
             language=arguments.get("language", ""),
             focus=arguments.get("focus", ""),
+            project_path=arguments.get("project_path", ""),
         ))
     elif name == "generate_code":
         return text(await _run_sync(
@@ -346,6 +371,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             description=arguments["description"],
             language=arguments.get("language", "Python"),
             context_path=arguments.get("context_path", ""),
+            project_path=arguments.get("project_path", ""),
         ))
     elif name == "improve_code":
         return text(await _run_sync(
@@ -353,6 +379,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             code=arguments["code"],
             language=arguments.get("language", ""),
             instructions=arguments.get("instructions", ""),
+            project_path=arguments.get("project_path", ""),
         ))
 
     # ── Git Operations ───────────────────────────────────────────────────
