@@ -10,6 +10,7 @@ from pathlib import Path
 
 DB_PATH = Path("devguardian.db")
 
+
 async def init_db():
     """Ensure the memory database and necessary tables exist."""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -24,7 +25,7 @@ async def init_db():
                 PRIMARY KEY (thread_id, checkpoint_id)
             )
         """)
-        
+
         # Knowledge Journal (for the agent's long-term project insights)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS journal (
@@ -37,14 +38,13 @@ async def init_db():
         """)
         await db.commit()
 
+
 async def add_insight(topic: str, insight: str, tags: str = ""):
     """Record a project-specific insight for future reference."""
     async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "INSERT INTO journal (topic, insight, tags) VALUES (?, ?, ?)",
-            (topic, insight, tags)
-        )
+        await db.execute("INSERT INTO journal (topic, insight, tags) VALUES (?, ?, ?)", (topic, insight, tags))
         await db.commit()
+
 
 async def get_insights(topic: str = None):
     """Retrieve recorded insights."""

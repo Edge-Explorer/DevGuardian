@@ -25,30 +25,40 @@ _SECRET_PATTERNS: list[tuple[str, str]] = [
     (r'(?i)(api_key|apikey|api_secret)\s*=\s*["\'][^\s"\']{8,}["\']', "API key assignment"),
     (r'(?i)(token|auth_token|access_token)\s*=\s*["\'][^\s"\']{8,}["\']', "Token assignment"),
     (r'(?i)(private_key|privkey)\s*=\s*["\'][^\s"\']{8,}["\']', "Private key assignment"),
-
     # Well-known service keys (distinct prefixes — always flag)
-    (r'AIza[0-9A-Za-z_\-]{35}', "Google API Key"),
+    (r"AIza[0-9A-Za-z_\-]{35}", "Google API Key"),
     (r'(?i)gemini[_\-]?api[_\-]?key\s*=\s*["\']?AIza[0-9A-Za-z_\-]{35}', "Gemini API Key"),
-    (r'sk-[a-zA-Z0-9]{48}', "OpenAI API Key"),
-    (r'sk-proj-[a-zA-Z0-9_\-]{40,}', "OpenAI Project Key"),
-    (r'ghp_[a-zA-Z0-9]{36}', "GitHub Personal Access Token"),
-    (r'gho_[a-zA-Z0-9]{36}', "GitHub OAuth Token"),
-    (r'github_pat_[a-zA-Z0-9_]{82}', "GitHub Fine-grained PAT"),
-    (r'xoxb-[0-9]{11}-[0-9]{11}-[a-zA-Z0-9]{24}', "Slack Bot Token"),
-    (r'xoxp-[0-9]{11}-[0-9]{11}-[0-9]{11}-[a-zA-Z0-9]{32}', "Slack User Token"),
-    (r'AKIA[0-9A-Z]{16}', "AWS Access Key ID"),
+    (r"sk-[a-zA-Z0-9]{48}", "OpenAI API Key"),
+    (r"sk-proj-[a-zA-Z0-9_\-]{40,}", "OpenAI Project Key"),
+    (r"ghp_[a-zA-Z0-9]{36}", "GitHub Personal Access Token"),
+    (r"gho_[a-zA-Z0-9]{36}", "GitHub OAuth Token"),
+    (r"github_pat_[a-zA-Z0-9_]{82}", "GitHub Fine-grained PAT"),
+    (r"xoxb-[0-9]{11}-[0-9]{11}-[a-zA-Z0-9]{24}", "Slack Bot Token"),
+    (r"xoxp-[0-9]{11}-[0-9]{11}-[0-9]{11}-[a-zA-Z0-9]{32}", "Slack User Token"),
+    (r"AKIA[0-9A-Z]{16}", "AWS Access Key ID"),
     (r'(?i)aws[_\-]?secret[_\-]?access[_\-]?key\s*=\s*["\']?[A-Za-z0-9/+=]{40}', "AWS Secret Key"),
-    (r'-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----', "Private Key File"),
+    (r"-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----", "Private Key File"),
     (r'(?i)sendgrid[_\-]?api[_\-]?key\s*=\s*["\']?SG\.[a-zA-Z0-9_\-.]{22,}', "SendGrid Key"),
 ]
 
 # Files that are safe to contain secret patterns (they define them, not leak them)
 _SAFE_FILES = {
-    "security.py", ".env.example", "README.md", "readme.md",
-    ".env.sample", ".env.template",
-    "swarm.py", "github_review.py", "git_ops.py", "engineer.py",
-    "tdd.py", "infra.py", "mass_refactor.py", "gemini_client.py",
-    "code_helper.py", "debugger.py",
+    "security.py",
+    ".env.example",
+    "README.md",
+    "readme.md",
+    ".env.sample",
+    ".env.template",
+    "swarm.py",
+    "github_review.py",
+    "git_ops.py",
+    "engineer.py",
+    "tdd.py",
+    "infra.py",
+    "mass_refactor.py",
+    "gemini_client.py",
+    "code_helper.py",
+    "debugger.py",
 }
 
 # Sensitive files that should ALWAYS be in .gitignore
@@ -78,6 +88,7 @@ _MUST_IGNORE = [
 # ---------------------------------------------------------------------------
 # 2. .env file validator
 # ---------------------------------------------------------------------------
+
 
 def validate_env_file(env_path: str) -> dict:
     """
@@ -119,9 +130,7 @@ def validate_env_file(env_path: str) -> dict:
         # Must be KEY=VALUE format
         if "=" not in line:
             result["valid"] = False
-            result["issues"].append(
-                f"Line {line_no}: Missing '=' separator → `{line[:50]}`"
-            )
+            result["issues"].append(f"Line {line_no}: Missing '=' separator → `{line[:50]}`")
             continue
 
         key, _, value = line.partition("=")
@@ -129,27 +138,22 @@ def validate_env_file(env_path: str) -> dict:
         value = value.strip()
 
         # Key must be a valid identifier
-        if not re.match(r'^[A-Z_][A-Z0-9_]*$', key, re.IGNORECASE):
+        if not re.match(r"^[A-Z_][A-Z0-9_]*$", key, re.IGNORECASE):
             result["valid"] = False
             result["issues"].append(
-                f"Line {line_no}: Invalid key name `{key}` "
-                "(keys should be UPPERCASE_WITH_UNDERSCORES)"
+                f"Line {line_no}: Invalid key name `{key}` (keys should be UPPERCASE_WITH_UNDERSCORES)"
             )
 
         result["keys"].append(key)
 
         # Flag empty values as warnings (not errors)
         if not value:
-            result["warnings"].append(
-                f"Key `{key}` has an empty value — "
-                "make sure this is intentional."
-            )
+            result["warnings"].append(f"Key `{key}` has an empty value — make sure this is intentional.")
 
         # Flag placeholder values
         if value.lower() in {"your_key_here", "changeme", "placeholder", "xxx", "todo"}:
             result["warnings"].append(
-                f"Key `{key}` still has a placeholder value — "
-                "replace it with a real value before running."
+                f"Key `{key}` still has a placeholder value — replace it with a real value before running."
             )
 
     return result
@@ -189,6 +193,7 @@ def format_env_validation_report(env_path: str) -> str:
 # 3. Content credential scanner
 # ---------------------------------------------------------------------------
 
+
 def scan_content_for_secrets(content: str, filename: str = "") -> list[str]:
     """
     Scan text content for credential leak patterns.
@@ -223,6 +228,7 @@ def scan_content_for_secrets(content: str, filename: str = "") -> list[str]:
 # 4. .gitignore coverage checker
 # ---------------------------------------------------------------------------
 
+
 def check_gitignore(repo_path: str) -> dict:
     """
     Check that .gitignore properly covers sensitive file patterns.
@@ -247,20 +253,16 @@ def check_gitignore(repo_path: str) -> dict:
         return result
 
     gitignore_content = gitignore_path.read_text(encoding="utf-8", errors="replace")
-    gitignore_lines = {line.strip() for line in gitignore_content.splitlines()
-                       if line.strip() and not line.strip().startswith("#")}
+    gitignore_lines = {
+        line.strip() for line in gitignore_content.splitlines() if line.strip() and not line.strip().startswith("#")
+    }
 
     for pattern in _MUST_IGNORE:
         # Check exact match or wildcard coverage
         covered = (
             pattern in gitignore_lines
             or f"/{pattern}" in gitignore_lines
-            or any(
-                re.fullmatch(
-                    g.replace(".", r"\.").replace("*", ".*"),
-                    pattern
-                ) for g in gitignore_lines if "*" in g
-            )
+            or any(re.fullmatch(g.replace(".", r"\.").replace("*", ".*"), pattern) for g in gitignore_lines if "*" in g)
         )
         if covered:
             result["covered"].append(pattern)
@@ -270,8 +272,7 @@ def check_gitignore(repo_path: str) -> dict:
     if result["missing"]:
         result["ok"] = False
         result["warnings"].append(
-            "These patterns are missing from .gitignore: "
-            + ", ".join(f"`{p}`" for p in result["missing"])
+            "These patterns are missing from .gitignore: " + ", ".join(f"`{p}`" for p in result["missing"])
         )
 
     return result
@@ -280,6 +281,7 @@ def check_gitignore(repo_path: str) -> dict:
 # ---------------------------------------------------------------------------
 # 5. Pre-push security gate
 # ---------------------------------------------------------------------------
+
 
 def _get_staged_files(repo_path: str) -> list[tuple[str, str]]:
     """
@@ -359,9 +361,7 @@ def pre_push_security_gate(repo_path: str) -> tuple[bool, str]:
         if gi["missing"]:
             report_lines.append("### ❌ .gitignore is Missing Critical Patterns")
             report_lines.append(
-                "Add these to your `.gitignore` file immediately:\n```\n"
-                + "\n".join(gi["missing"])
-                + "\n```"
+                "Add these to your `.gitignore` file immediately:\n```\n" + "\n".join(gi["missing"]) + "\n```"
             )
     else:
         report_lines.append("### ✅ .gitignore Coverage — All clear")
@@ -376,7 +376,7 @@ def pre_push_security_gate(repo_path: str) -> tuple[bool, str]:
             "git rm --cached .env\n"
             'echo ".env" >> .gitignore\n'
             "git add .gitignore\n"
-            '```\n'
+            "```\n"
         )
     else:
         report_lines.append("### ✅ .env not tracked by git — Safe")
@@ -394,12 +394,8 @@ def pre_push_security_gate(repo_path: str) -> tuple[bool, str]:
 
     if secret_findings:
         issues.extend(secret_findings)
-        report_lines.append(
-            f"\n### ❌ SECRETS DETECTED in {len(staged_files)} staged file(s)!"
-        )
-        report_lines.append(
-            "**PUSH BLOCKED** — The following potential credentials were found:\n"
-        )
+        report_lines.append(f"\n### ❌ SECRETS DETECTED in {len(staged_files)} staged file(s)!")
+        report_lines.append("**PUSH BLOCKED** — The following potential credentials were found:\n")
         for finding in secret_findings:
             report_lines.append(finding)
         report_lines.append(
@@ -409,9 +405,7 @@ def pre_push_security_gate(repo_path: str) -> tuple[bool, str]:
             "3. If already committed previously: rotate the credential immediately!\n"
         )
     elif staged_files:
-        report_lines.append(
-            f"\n### ✅ No secrets found in {len(staged_files)} staged file(s)"
-        )
+        report_lines.append(f"\n### ✅ No secrets found in {len(staged_files)} staged file(s)")
     else:
         report_lines.append("\n### ℹ️ No staged files to scan")
 

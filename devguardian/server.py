@@ -21,27 +21,37 @@ load_dotenv()
 
 # Configure logging to stderr (visible in MCP host debug logs)
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stderr
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", stream=sys.stderr
 )
 logger = logging.getLogger("devguardian")
+
 
 # Run a blocking function in the thread pool (for Gemini calls)
 async def _run_sync(func, *args, **kwargs):
     return await asyncio.to_thread(func, *args, **kwargs)
 
+
 # ── Tool imports ──────────────────────────────────────────────────────────────
-from devguardian.tools.debugger      import debug_error
-from devguardian.tools.code_helper   import explain_code, review_code, generate_code, improve_code
-from devguardian.tools.tdd           import test_and_fix
+from devguardian.tools.debugger import debug_error
+from devguardian.tools.code_helper import explain_code, review_code, generate_code, improve_code
+from devguardian.tools.tdd import test_and_fix
 from devguardian.tools.github_review import review_pull_request
-from devguardian.tools.infra         import dockerize, generate_ci
+from devguardian.tools.infra import dockerize, generate_ci
 from devguardian.tools.mass_refactor import mass_refactor
 from devguardian.tools.git_ops import (
-    git_status, git_add, git_commit, git_push, git_pull,
-    git_log, git_diff, git_branch, git_checkout,
-    git_stash, git_reset, git_remote, smart_commit,
+    git_status,
+    git_add,
+    git_commit,
+    git_push,
+    git_pull,
+    git_log,
+    git_diff,
+    git_branch,
+    git_checkout,
+    git_stash,
+    git_reset,
+    git_remote,
+    smart_commit,
 )
 from devguardian.utils.security import format_env_validation_report, pre_push_security_gate
 
@@ -59,7 +69,6 @@ app = Server("devguardian")
 @app.list_tools()
 async def list_tools() -> list[types.Tool]:
     return [
-
         # ── AI Code Tools ─────────────────────────────────────────────────────
         types.Tool(
             name="debug_error",
@@ -68,10 +77,10 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "error_message": {"type": "string"},
-                    "stack_trace":   {"type": "string"},
-                    "code_snippet":  {"type": "string"},
-                    "language":      {"type": "string"},
-                    "project_path":  {"type": "string"},
+                    "stack_trace": {"type": "string"},
+                    "code_snippet": {"type": "string"},
+                    "language": {"type": "string"},
+                    "project_path": {"type": "string"},
                 },
                 "required": ["error_message"],
             },
@@ -82,9 +91,9 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "code":         {"type": "string"},
-                    "question":     {"type": "string"},
-                    "language":     {"type": "string"},
+                    "code": {"type": "string"},
+                    "question": {"type": "string"},
+                    "language": {"type": "string"},
                     "project_path": {"type": "string"},
                 },
                 "required": ["code"],
@@ -96,9 +105,9 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "code":         {"type": "string"},
-                    "language":     {"type": "string"},
-                    "focus":        {"type": "string"},
+                    "code": {"type": "string"},
+                    "language": {"type": "string"},
+                    "focus": {"type": "string"},
                     "project_path": {"type": "string"},
                 },
                 "required": ["code"],
@@ -110,8 +119,8 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "description":  {"type": "string"},
-                    "language":     {"type": "string"},
+                    "description": {"type": "string"},
+                    "language": {"type": "string"},
                     "project_path": {"type": "string"},
                 },
                 "required": ["description"],
@@ -123,14 +132,13 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "code":         {"type": "string"},
+                    "code": {"type": "string"},
                     "instructions": {"type": "string"},
                     "project_path": {"type": "string"},
                 },
                 "required": ["code"],
             },
         ),
-
         # ── Security ──────────────────────────────────────────────────────────
         types.Tool(
             name="validate_env",
@@ -154,7 +162,6 @@ async def list_tools() -> list[types.Tool]:
                 "required": ["repo_path"],
             },
         ),
-
         # ── Advanced Power Tools ──────────────────────────────────────────────
         types.Tool(
             name="agent_swarm",
@@ -165,7 +172,7 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "task":         {"type": "string", "description": "What to build or fix."},
+                    "task": {"type": "string", "description": "What to build or fix."},
                     "project_path": {"type": "string", "description": "Absolute path to project root."},
                 },
                 "required": ["task", "project_path"],
@@ -181,8 +188,11 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "project_path": {"type": "string"},
-                    "target_file":  {"type": "string", "description": "Path to the file to test (absolute or relative to project_path)."},
-                    "max_rounds":   {"type": "integer", "description": "Max fix iterations (default: 3)."},
+                    "target_file": {
+                        "type": "string",
+                        "description": "Path to the file to test (absolute or relative to project_path).",
+                    },
+                    "max_rounds": {"type": "integer", "description": "Max fix iterations (default: 3)."},
                 },
                 "required": ["project_path", "target_file"],
             },
@@ -196,8 +206,8 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "repo":         {"type": "string", "description": "Full repo name, e.g. 'owner/repo'."},
-                    "pr_number":    {"type": "integer", "description": "Pull Request number."},
+                    "repo": {"type": "string", "description": "Full repo name, e.g. 'owner/repo'."},
+                    "pr_number": {"type": "integer", "description": "Pull Request number."},
                     "project_path": {"type": "string", "description": "Optional local project path for extra context."},
                 },
                 "required": ["repo", "pr_number"],
@@ -226,8 +236,11 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "project_path":   {"type": "string"},
-                    "deploy_target":  {"type": "string", "description": "e.g. 'docker', 'railway', 'heroku' (optional)."},
+                    "project_path": {"type": "string"},
+                    "deploy_target": {
+                        "type": "string",
+                        "description": "e.g. 'docker', 'railway', 'heroku' (optional).",
+                    },
                 },
                 "required": ["project_path"],
             },
@@ -242,12 +255,11 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "project_path": {"type": "string"},
-                    "instruction":  {"type": "string", "description": "What to change across the whole codebase."},
+                    "instruction": {"type": "string", "description": "What to change across the whole codebase."},
                 },
                 "required": ["project_path", "instruction"],
             },
         ),
-
         # ── Git ───────────────────────────────────────────────────────────────
         types.Tool(
             name="git_status",
@@ -279,8 +291,8 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "repo_path": {"type": "string"},
-                    "remote":    {"type": "string"},
-                    "branch":    {"type": "string"},
+                    "remote": {"type": "string"},
+                    "branch": {"type": "string"},
                 },
                 "required": ["repo_path"],
             },
@@ -292,8 +304,8 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "repo_path": {"type": "string"},
-                    "remote":    {"type": "string"},
-                    "branch":    {"type": "string"},
+                    "remote": {"type": "string"},
+                    "branch": {"type": "string"},
                 },
                 "required": ["repo_path"],
             },
@@ -327,9 +339,9 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "repo_path":    {"type": "string"},
-                    "branch_name":  {"type": "string"},
-                    "create":       {"type": "boolean"},
+                    "repo_path": {"type": "string"},
+                    "branch_name": {"type": "string"},
+                    "create": {"type": "boolean"},
                 },
                 "required": ["repo_path", "branch_name"],
             },
@@ -341,8 +353,8 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "repo_path": {"type": "string"},
-                    "action":    {"type": "string"},
-                    "message":   {"type": "string"},
+                    "action": {"type": "string"},
+                    "message": {"type": "string"},
                 },
                 "required": ["repo_path"],
             },
@@ -354,8 +366,8 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "repo_path": {"type": "string"},
-                    "mode":      {"type": "string"},
-                    "target":    {"type": "string"},
+                    "mode": {"type": "string"},
+                    "target": {"type": "string"},
                 },
                 "required": ["repo_path"],
             },
@@ -371,13 +383,12 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "repo_path":     {"type": "string"},
+                    "repo_path": {"type": "string"},
                     "extra_context": {"type": "string"},
                 },
                 "required": ["repo_path"],
             },
         ),
-
         # ── Autonomous Agent ──────────────────────────────────────────────────
         types.Tool(
             name="autonomous_engineer",
@@ -385,7 +396,7 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "task":         {"type": "string"},
+                    "task": {"type": "string"},
                     "project_path": {"type": "string"},
                 },
                 "required": ["task", "project_path"],
@@ -405,14 +416,19 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         return [types.TextContent(type="text", text=str(result))]
 
     try:
-
         # ── AI Code Tools ─────────────────────────────────────────────────────
-        if   name == "debug_error":    return text(await _run_sync(debug_error, **arguments))
-        elif name == "explain_code":   return text(await _run_sync(explain_code, **arguments))
-        elif name == "review_code":    return text(await _run_sync(review_code, **arguments))
-        elif name == "generate_code":  return text(await _run_sync(generate_code, **arguments))
-        elif name == "improve_code":   return text(await _run_sync(improve_code, **arguments))
-        elif name == "smart_commit":   return text(await _run_sync(smart_commit, **arguments))
+        if name == "debug_error":
+            return text(await _run_sync(debug_error, **arguments))
+        elif name == "explain_code":
+            return text(await _run_sync(explain_code, **arguments))
+        elif name == "review_code":
+            return text(await _run_sync(review_code, **arguments))
+        elif name == "generate_code":
+            return text(await _run_sync(generate_code, **arguments))
+        elif name == "improve_code":
+            return text(await _run_sync(improve_code, **arguments))
+        elif name == "smart_commit":
+            return text(await _run_sync(smart_commit, **arguments))
 
         # ── Security ──────────────────────────────────────────────────────────
         elif name == "validate_env":
@@ -424,10 +440,13 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         # ── Power Tools ───────────────────────────────────────────────────────
         elif name == "agent_swarm":
             from devguardian.agents.swarm import run_swarm
-            return text(await run_swarm(
-                task=arguments["task"],
-                project_path=arguments["project_path"],
-            ))
+
+            return text(
+                await run_swarm(
+                    task=arguments["task"],
+                    project_path=arguments["project_path"],
+                )
+            )
         elif name == "test_and_fix":
             return text(await _run_sync(test_and_fix, **arguments))
         elif name == "review_pull_request":
@@ -440,18 +459,30 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             return text(await _run_sync(mass_refactor, **arguments))
 
         # ── Git ───────────────────────────────────────────────────────────────
-        elif name == "git_status":   return text(git_status(arguments["repo_path"]))
-        elif name == "git_add":      return text(git_add(**arguments))
-        elif name == "git_commit":   return text(git_commit(**arguments))
-        elif name == "git_push":     return text(git_push(**arguments))
-        elif name == "git_pull":     return text(git_pull(**arguments))
-        elif name == "git_log":      return text(git_log(**arguments))
-        elif name == "git_diff":     return text(git_diff(**arguments))
-        elif name == "git_branch":   return text(git_branch(arguments["repo_path"]))
-        elif name == "git_checkout": return text(git_checkout(**arguments))
-        elif name == "git_stash":    return text(git_stash(**arguments))
-        elif name == "git_reset":    return text(git_reset(**arguments))
-        elif name == "git_remote":   return text(git_remote(arguments["repo_path"]))
+        elif name == "git_status":
+            return text(git_status(arguments["repo_path"]))
+        elif name == "git_add":
+            return text(git_add(**arguments))
+        elif name == "git_commit":
+            return text(git_commit(**arguments))
+        elif name == "git_push":
+            return text(git_push(**arguments))
+        elif name == "git_pull":
+            return text(git_pull(**arguments))
+        elif name == "git_log":
+            return text(git_log(**arguments))
+        elif name == "git_diff":
+            return text(git_diff(**arguments))
+        elif name == "git_branch":
+            return text(git_branch(arguments["repo_path"]))
+        elif name == "git_checkout":
+            return text(git_checkout(**arguments))
+        elif name == "git_stash":
+            return text(git_stash(**arguments))
+        elif name == "git_reset":
+            return text(git_reset(**arguments))
+        elif name == "git_remote":
+            return text(git_remote(arguments["repo_path"]))
 
         # ── Legacy Autonomous Agent ───────────────────────────────────────────
         elif name == "autonomous_engineer":
@@ -461,13 +492,15 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
 
             await init_db()
             graph = create_engineer_graph()
-            task  = arguments["task"]
-            result = await graph.ainvoke({
-                "messages":         [HumanMessage(content=task)],
-                "project_path":     arguments["project_path"],
-                "task_description": task,
-                "is_resolved":      False,
-            })
+            task = arguments["task"]
+            result = await graph.ainvoke(
+                {
+                    "messages": [HumanMessage(content=task)],
+                    "project_path": arguments["project_path"],
+                    "task_description": task,
+                    "is_resolved": False,
+                }
+            )
             return text(result["messages"][-1].content)
 
         else:
@@ -485,9 +518,11 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
 def main():
     asyncio.run(_run())
 
+
 async def _run():
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())
+
 
 if __name__ == "__main__":
     main()

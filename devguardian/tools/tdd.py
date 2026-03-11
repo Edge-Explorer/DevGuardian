@@ -46,7 +46,7 @@ def test_and_fix(project_path: str, target_file: str, max_rounds: int = 3) -> st
         return f"❌ Target file not found: {target}"
 
     source_code = target.read_text(encoding="utf-8")
-    file_name = target.stem                         # e.g. "security"
+    file_name = target.stem  # e.g. "security"
     test_file = root / "tests" / f"test_{file_name}.py"
     test_file.parent.mkdir(exist_ok=True)
 

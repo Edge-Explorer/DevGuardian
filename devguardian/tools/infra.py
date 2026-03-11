@@ -63,9 +63,7 @@ def dockerize(project_path: str) -> str:
     else:
         # Best-effort: put everything in Dockerfile
         dockerfile_content = raw
-        compose_content = (
-            "version: '3.8'\nservices:\n  app:\n    build: .\n    ports:\n      - '8000:8000'\n"
-        )
+        compose_content = "version: '3.8'\nservices:\n  app:\n    build: .\n    ports:\n      - '8000:8000'\n"
 
     dockerfile_path = root / "Dockerfile"
     compose_path = root / "docker-compose.yml"

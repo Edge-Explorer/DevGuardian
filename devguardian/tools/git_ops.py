@@ -31,7 +31,7 @@ def _run_git(args: list[str], cwd: str) -> tuple[str, str, int]:
     """
     Run a git command synchronously. Returns (stdout, stderr, returncode).
     Times out after _GIT_TIMEOUT seconds.
-    
+
     NOTE: Called directly from async handlers — git ops are ~60ms so blocking
     the event loop briefly is acceptable and avoids asyncio subprocess issues on Windows.
     """
@@ -39,10 +39,10 @@ def _run_git(args: list[str], cwd: str) -> tuple[str, str, int]:
         result = subprocess.run(
             ["git"] + args,  # shell=False: args go directly to OS, no shell injection risk
             cwd=cwd,
-            stdin=subprocess.DEVNULL,   # CRITICAL: prevents git from inheriting the
-                                        # MCP server's stdin (JSON-RPC pipe). Without
-                                        # this, git blocks waiting for terminal input
-                                        # that never comes, hanging the entire server.
+            stdin=subprocess.DEVNULL,  # CRITICAL: prevents git from inheriting the
+            # MCP server's stdin (JSON-RPC pipe). Without
+            # this, git blocks waiting for terminal input
+            # that never comes, hanging the entire server.
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -68,6 +68,7 @@ def _fmt(stdout: str, stderr: str, code: int) -> str:
 # ---------------------------------------------------------------------------
 # Git tools — synchronous, called directly from async server handlers
 # ---------------------------------------------------------------------------
+
 
 def git_status(repo_path: str) -> str:
     out, err, code = _run_git(["status"], repo_path)
@@ -193,10 +194,7 @@ def smart_commit(repo_path: str, extra_context: str = "") -> str:
 
     # Step 3: Ask Gemini for a commit message
     context_hint = f"\n\nAdditional context: {extra_context}" if extra_context else ""
-    prompt = (
-        f"Generate a Git commit message for the following diff:{context_hint}\n\n"
-        f"```diff\n{diff_out[:6000]}\n```"
-    )
+    prompt = f"Generate a Git commit message for the following diff:{context_hint}\n\n```diff\n{diff_out[:6000]}\n```"
     commit_message = ask_gemini(prompt, system_instruction=_GIT_SYSTEM)
     commit_message = commit_message.strip().strip("`").strip()
     if commit_message.startswith("git commit"):

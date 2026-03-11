@@ -21,12 +21,10 @@ def _get_client():
     global _CLIENT
     if _CLIENT is None:
         from google import genai
+
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise EnvironmentError(
-                "GEMINI_API_KEY is not set. "
-                "Copy .env.example -> .env and fill in your key."
-            )
+            raise EnvironmentError("GEMINI_API_KEY is not set. Copy .env.example -> .env and fill in your key.")
         _CLIENT = genai.Client(api_key=api_key)
     return _CLIENT
 
@@ -48,10 +46,14 @@ def ask_gemini(prompt: str, system_instruction: str | None = None) -> str:
     try:
         from google.genai import types
 
-        config = types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            temperature=0.7,
-        ) if system_instruction else None
+        config = (
+            types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.7,
+            )
+            if system_instruction
+            else None
+        )
 
         client = _get_client()
         response = client.models.generate_content(

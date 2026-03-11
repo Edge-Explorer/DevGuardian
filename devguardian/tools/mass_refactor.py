@@ -47,10 +47,7 @@ def mass_refactor(project_path: str, instruction: str) -> str:
         return f"❌ Project path not found: {project_path}"
 
     # Collect all .py files, filtering skip dirs
-    all_py_files = [
-        f for f in root.rglob("*.py")
-        if not any(part in _SKIP_DIRS for part in f.parts)
-    ]
+    all_py_files = [f for f in root.rglob("*.py") if not any(part in _SKIP_DIRS for part in f.parts)]
 
     if not all_py_files:
         return "❌ No Python files found in project."
@@ -113,7 +110,7 @@ def mass_refactor(project_path: str, instruction: str) -> str:
 
     if skipped:
         report_parts.append(f"### ⬜ Skipped ({len(skipped)})\n")
-        report_parts.extend(skipped[:10])   # Show max 10
+        report_parts.extend(skipped[:10])  # Show max 10
         if len(skipped) > 10:
             report_parts.append(f"... and {len(skipped) - 10} more\n")
         report_parts.append("\n")

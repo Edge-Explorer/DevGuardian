@@ -34,7 +34,7 @@ def _github_request(url: str, token: str | None = None) -> dict | list:
             "Accept": "application/vnd.github.v3+json",
             "User-Agent": "DevGuardian-MCP/1.0",
             **({"Authorization": f"Bearer {token}"} if token else {}),
-        }
+        },
     )
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
@@ -86,10 +86,10 @@ def review_pull_request(
     total_chars = 0
     for f in files:
         filename = f.get("filename", "unknown")
-        status = f.get("status", "modified")    # added / modified / removed
+        status = f.get("status", "modified")  # added / modified / removed
         additions = f.get("additions", 0)
         deletions = f.get("deletions", 0)
-        patch = f.get("patch", "")              # unified diff text
+        patch = f.get("patch", "")  # unified diff text
 
         header = f"\n### {status.upper()}: `{filename}` (+{additions} -{deletions})\n"
         diff_parts.append(header)
@@ -118,8 +118,4 @@ def review_pull_request(
 
     review = ask_gemini(prompt, system_instruction=_REVIEW_SYSTEM)
 
-    return (
-        f"# 🌐 DevGuardian PR Review — #{pr_number}\n"
-        f"**{title}** by @{author}\n\n"
-        f"{review}"
-    )
+    return f"# 🌐 DevGuardian PR Review — #{pr_number}\n**{title}** by @{author}\n\n{review}"

@@ -20,14 +20,39 @@ from pathlib import Path
 # Configuration
 # ---------------------------------------------------------------------------
 _IGNORE_DIRS: set[str] = {
-    ".venv", "venv", "__pycache__", "node_modules", ".git",
-    "dist", "build", ".idea", ".vscode", ".mypy_cache", ".pytest_cache",
-    ".eggs", ".tox", "htmlcov",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    ".idea",
+    ".vscode",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".eggs",
+    ".tox",
+    "htmlcov",
 }
 
 _SOURCE_EXTENSIONS: set[str] = {
-    ".py", ".js", ".ts", ".jsx", ".tsx", ".html", ".css", ".scss",
-    ".go", ".rs", ".java", ".c", ".cpp", ".h", ".rb", ".php",
+    ".py",
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".html",
+    ".css",
+    ".scss",
+    ".go",
+    ".rs",
+    ".java",
+    ".c",
+    ".cpp",
+    ".h",
+    ".rb",
+    ".php",
 }
 
 # Priority order when looking for the README
@@ -43,6 +68,7 @@ _PRIORITY_FILENAMES = {"server.py", "main.py", "app.py", "index.py", "__init__.p
 # ---------------------------------------------------------------------------
 # Low-level helpers
 # ---------------------------------------------------------------------------
+
 
 def read_file(file_path: str) -> str:
     """Read a single file and return its full content as a string."""
@@ -89,6 +115,7 @@ def list_project_files(project_path: str, max_files: int = 100) -> list[str]:
 # File tree builder
 # ---------------------------------------------------------------------------
 
+
 def _build_file_tree(root: Path, max_entries: int = 80) -> str:
     """
     Build a compact, human-readable file tree string.
@@ -103,8 +130,7 @@ def _build_file_tree(root: Path, max_entries: int = 80) -> str:
     count = 0
 
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = sorted(d for d in dirnames
-                             if d not in _IGNORE_DIRS and not d.endswith(".egg-info"))
+        dirnames[:] = sorted(d for d in dirnames if d not in _IGNORE_DIRS and not d.endswith(".egg-info"))
         rel = Path(dirpath).relative_to(root)
         depth = len(rel.parts)
         indent = "  " * depth
@@ -126,6 +152,7 @@ def _build_file_tree(root: Path, max_entries: int = 80) -> str:
 # ---------------------------------------------------------------------------
 # Import-aware retrieval
 # ---------------------------------------------------------------------------
+
 
 def _extract_python_imports(code: str) -> list[str]:
     """
@@ -164,6 +191,7 @@ def _resolve_import(module_path: str, project_root: Path) -> Path | None:
 # ---------------------------------------------------------------------------
 # Main public API
 # ---------------------------------------------------------------------------
+
 
 def build_project_context(
     project_path: str,

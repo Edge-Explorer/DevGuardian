@@ -25,13 +25,13 @@ from devguardian.utils.file_reader import build_project_context
 # State
 # ---------------------------------------------------------------------------
 class SwarmState(TypedDict):
-    task:           Required[str]
-    project_path:   Required[str]
-    project_dna:    str           # enriched context (loaded once)
-    code_draft:     str           # Coder's output
-    test_report:    str           # Tester's output
-    final_verdict:  str           # Reviewer's output
-    messages:       Annotated[List[BaseMessage], "trace"]
+    task: Required[str]
+    project_path: Required[str]
+    project_dna: str  # enriched context (loaded once)
+    code_draft: str  # Coder's output
+    test_report: str  # Tester's output
+    final_verdict: str  # Reviewer's output
+    messages: Annotated[List[BaseMessage], "trace"]
 
 
 # ---------------------------------------------------------------------------
@@ -59,17 +59,21 @@ def load_dna(state: SwarmState) -> SwarmState:
 def coder_agent(state: SwarmState) -> SwarmState:
     llm = _get_llm(temperature=0.3)
 
-    system = SystemMessage(content=(
-        "You are an expert Python Coder Agent in the DevGuardian Swarm. "
-        "Your sole job is to write or fix code. "
-        "Given a task and the project context, produce complete, correct Python code. "
-        "Return ONLY code. No explanations, no markdown fences."
-    ))
-    user = HumanMessage(content=(
-        f"## Project DNA\n{state['project_dna'][:3000]}\n\n"
-        f"## Task\n{state['task']}\n\n"
-        "Write the implementation now."
-    ))
+    system = SystemMessage(
+        content=(
+            "You are an expert Python Coder Agent in the DevGuardian Swarm. "
+            "Your sole job is to write or fix code. "
+            "Given a task and the project context, produce complete, correct Python code. "
+            "Return ONLY code. No explanations, no markdown fences."
+        )
+    )
+    user = HumanMessage(
+        content=(
+            f"## Project DNA\n{state['project_dna'][:3000]}\n\n"
+            f"## Task\n{state['task']}\n\n"
+            "Write the implementation now."
+        )
+    )
 
     response: AIMessage = llm.invoke([system, user])
     code = response.content.strip()
@@ -82,9 +86,7 @@ def coder_agent(state: SwarmState) -> SwarmState:
     return {
         **state,
         "code_draft": code,
-        "messages": state.get("messages", []) + [
-            HumanMessage(content="[Coder produced draft code]")
-        ],
+        "messages": state.get("messages", []) + [HumanMessage(content="[Coder produced draft code]")],
     }
 
 
@@ -94,26 +96,28 @@ def coder_agent(state: SwarmState) -> SwarmState:
 def tester_agent(state: SwarmState) -> SwarmState:
     llm = _get_llm(temperature=0.4)
 
-    system = SystemMessage(content=(
-        "You are a meticulous Tester Agent in the DevGuardian Swarm. "
-        "You audit code written by the Coder for bugs, edge cases, and missing validation. "
-        "Report your findings clearly with bullet points. "
-        "Do NOT rewrite the code — only surface issues and test scenarios."
-    ))
-    user = HumanMessage(content=(
-        f"## Coder's Draft\n```python\n{state['code_draft']}\n```\n\n"
-        f"## Original Task\n{state['task']}\n\n"
-        "List all bugs, missing edge cases, and test scenarios you would write. "
-        "Be specific — cite exact function names or line contexts."
-    ))
+    system = SystemMessage(
+        content=(
+            "You are a meticulous Tester Agent in the DevGuardian Swarm. "
+            "You audit code written by the Coder for bugs, edge cases, and missing validation. "
+            "Report your findings clearly with bullet points. "
+            "Do NOT rewrite the code — only surface issues and test scenarios."
+        )
+    )
+    user = HumanMessage(
+        content=(
+            f"## Coder's Draft\n```python\n{state['code_draft']}\n```\n\n"
+            f"## Original Task\n{state['task']}\n\n"
+            "List all bugs, missing edge cases, and test scenarios you would write. "
+            "Be specific — cite exact function names or line contexts."
+        )
+    )
 
     response: AIMessage = llm.invoke([system, user])
     return {
         **state,
         "test_report": response.content.strip(),
-        "messages": state.get("messages", []) + [
-            HumanMessage(content="[Tester produced report]")
-        ],
+        "messages": state.get("messages", []) + [HumanMessage(content="[Tester produced report]")],
     }
 
 
@@ -123,29 +127,31 @@ def tester_agent(state: SwarmState) -> SwarmState:
 def reviewer_agent(state: SwarmState) -> SwarmState:
     llm = _get_llm(temperature=0.2)
 
-    system = SystemMessage(content=(
-        "You are a senior Code Reviewer Agent in the DevGuardian Swarm. "
-        "You receive the Coder's draft and the Tester's report. "
-        "Your job: produce the FINAL, production-ready version of the code, "
-        "incorporating all Tester feedback and ensuring it matches project conventions. "
-        "Format your response as:\n"
-        "## Verdict\n<your assessment>\n\n## Final Code\n<complete code>\n\n## Changes Made\n<bullet list>"
-    ))
-    user = HumanMessage(content=(
-        f"## Project DNA\n{state['project_dna'][:2000]}\n\n"
-        f"## Task\n{state['task']}\n\n"
-        f"## Coder's Draft\n```python\n{state['code_draft']}\n```\n\n"
-        f"## Tester's Report\n{state['test_report']}\n\n"
-        "Produce the final verdict and production-ready code."
-    ))
+    system = SystemMessage(
+        content=(
+            "You are a senior Code Reviewer Agent in the DevGuardian Swarm. "
+            "You receive the Coder's draft and the Tester's report. "
+            "Your job: produce the FINAL, production-ready version of the code, "
+            "incorporating all Tester feedback and ensuring it matches project conventions. "
+            "Format your response as:\n"
+            "## Verdict\n<your assessment>\n\n## Final Code\n<complete code>\n\n## Changes Made\n<bullet list>"
+        )
+    )
+    user = HumanMessage(
+        content=(
+            f"## Project DNA\n{state['project_dna'][:2000]}\n\n"
+            f"## Task\n{state['task']}\n\n"
+            f"## Coder's Draft\n```python\n{state['code_draft']}\n```\n\n"
+            f"## Tester's Report\n{state['test_report']}\n\n"
+            "Produce the final verdict and production-ready code."
+        )
+    )
 
     response: AIMessage = llm.invoke([system, user])
     return {
         **state,
         "final_verdict": response.content.strip(),
-        "messages": state.get("messages", []) + [
-            HumanMessage(content="[Reviewer produced final verdict]")
-        ],
+        "messages": state.get("messages", []) + [HumanMessage(content="[Reviewer produced final verdict]")],
     }
 
 
