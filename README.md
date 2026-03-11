@@ -1,45 +1,80 @@
-# 🛡️ DevGuardian MCP Server: The "Mini-Antigravity" Edition
+# 🛡️ DevGuardian MCP Server: v2 — The Autonomous Engineering Edition
 
-> An AI-powered, **Project-Aware** coding assistant MCP server built with **Gemini 2.0 Flash** and **UV**.
-> Plug it into **Antigravity** or **Claude Desktop** for AI-assisted coding, debugging, and robust Git operations — now with a built-in **Pre-Push Security Gate**.
-
----
-
-## 🌟 What makes it a "Monster"?
-
-DevGuardian isn't just a generic script runner anymore. It now has a 360-degree view of your codebase and a built-in security shield. 
-
-1. **🧠 Project DNA Awareness:** When you ask it to review, explain, or improve code, DevGuardian no longer just looks at the file. It inhales your `README.md`, dependencies (`pyproject.toml`), full file tree, and import relationships before generating an answer. It writes code that *fits your architecture*.
-2. **🛡️ Built-in Security Gate:** DevGuardian actively watches your Git operations. If you attempt to `git push` or `smart_commit` an API key, password, or GitHub token, DevGuardian will **BLOCK the push** and alert you instantly.
-3. **Robust Architecture:** All 20+ tools are backed by standard async patterns, graceful error handling, and `stderr` logging so the host MCP client won't crash when edge cases hit. 
+> An AI-powered, **Project-Aware** coding assistant MCP server built with **Gemini 2.0 Flash** and **UV**.  
+> Plug it into **Antigravity** or **Claude Desktop** and get a full AI engineering team: debugging, reviewing, testing, deploying, and securing your code — all autonomously.
 
 ---
 
-## ✨ Features (20+ Tools)
+## 🌟 What makes DevGuardian a "Monster"?
 
-| Tool | Category | Description |
-|---|---|---|
-| `debug_error` | Code | Analyze errors & stack traces; get contextual root cause + fix |
-| `explain_code` | Code | Understand what any code does with full project context |
-| `review_code` | Code | Full codebase review: bugs, security, performance, style |
-| `generate_code` | Code | Generate clean code tailored to your project's architecture |
-| `improve_code` | Code | Refactor and improve existing code consistently |
-| 🛂 `validate_env` | Security | Validates `.env` files safely (never exposes secrets in UI) |
-| 🛡️ `security_scan` | Security | Scans repo for 20+ types of credential leaks and missing `.gitignore` rules |
-| `git_status` | Version Control | Show working tree status |
-| `git_add` | Version Control | Stage files for commit |
-| `git_commit` | Version Control | Commit with a custom message |
-| `git_push` | Version Control | **Push to remote (Protected by Security Gate)** |
-| `git_pull` | Version Control | Pull from remote |
-| `git_log` | Version Control | View commit history |
-| `git_diff` | Version Control | Show staged or unstaged diffs |
-| `git_branch` | Version Control | List all branches |
-| `git_checkout` | Version Control | Switch or create branches |
-| `git_stash` | Version Control | Stash / unstash changes |
-| `git_reset` | Version Control | Reset HEAD (soft, mixed, hard) |
-| `git_remote` | Version Control | List configured remotes |
-| ⭐ `smart_commit`| Automation | **Reads diff → generates commit message → checks for leaks → commits!** |
-| 🚀 `autonomous_engineer` | Agent | **LangGraph agent that plans, uses tools in loops, and verifies work!** |
+DevGuardian v2 is no longer a single script. It is a **multi-agent autonomous engineering ecosystem**:
+
+1. **🧠 Project DNA Awareness** — Before writing a single line of code, DevGuardian reads your `README`, `pyproject.toml`, full file tree, and import graph. It generates code that *fits your architecture*.
+2. **🤖 Agent Swarm** — A 3-agent pipeline (Coder → Tester → Reviewer) that builds features autonomously, finds bugs, and returns production-ready code.
+3. **🧪 TDD Auto-Pilot** — Generates pytest tests, runs them, reads failures, fixes the source code, and loops until green.
+4. **🌐 GitHub PR Reviewer** — Connects to live GitHub PRs, reads the diffs, and posts a structured expert review.
+5. **🐳 DevOps Generator** — Produces a production-grade `Dockerfile`, `docker-compose.yml`, and GitHub Actions `ci.yml` by reading your project stack.
+6. **🏗️ God-Mode Mass Refactoring** — Applies a single instruction across **every Python file** in the project simultaneously.
+7. **🛡️ Pre-Push Security Gate** — Actively blocks accidental pushes of API keys, tokens, and passwords.
+
+---
+
+## ✨ Complete Tool Reference (27 Tools)
+
+### 🤖 Autonomous Agents
+| Tool | Description |
+|---|---|
+| 🤖 `agent_swarm` | **3-Agent Pipeline**: Coder → Tester → Reviewer. Builds features, audits for bugs, returns production-ready code. |
+| 🚀 `autonomous_engineer` | **Stateful LangGraph Agent**: Plans, executes tools in loops, verifies work, and self-corrects. |
+
+### 🧠 AI Code Intelligence
+| Tool | Description |
+|---|---|
+| `debug_error` | Analyze errors & stack traces; get root cause + fix with project context |
+| `explain_code` | Understand what any code does in plain English |
+| `review_code` | Full project-aware codebase review: bugs, security, performance, style |
+| `generate_code` | Generate clean code tailored to your project's architecture |
+| `improve_code` | Refactor and improve existing code consistently |
+
+### 🔬 Quality & Testing
+| Tool | Description |
+|---|---|
+| 🧪 `test_and_fix` | **TDD Auto-Pilot**: generates pytest tests, runs them, fixes source until tests pass |
+| 🌐 `review_pull_request` | **GitHub PR Reviewer**: fetches PR diffs from GitHub & performs AI code review |
+
+### 🐳 DevOps & Infrastructure
+| Tool | Description |
+|---|---|
+| 🐳 `dockerize` | Auto-generates `Dockerfile` + `docker-compose.yml` for your project |
+| 🚀 `generate_ci` | Auto-generates `.github/workflows/ci.yml` (linting, testing, Docker) |
+
+### 🏗️ Mass Operations
+| Tool | Description |
+|---|---|
+| 🏗️ `mass_refactor` | **God-Mode**: applies one instruction across ALL Python files simultaneously |
+
+### 🛡️ Security
+| Tool | Description |
+|---|---|
+| 🛂 `validate_env` | Validates `.env` file format safely — never exposes secret values |
+| 🔍 `security_scan` | Scans repo for 20+ credential types + missing `.gitignore` rules |
+
+### ⚡ Version Control (Git Suite)
+| Tool | Description |
+|---|---|
+| ⭐ `smart_commit` | **AI reads your diff → writes commit message → scans for leaks → commits!** |
+| `git_status` | Show working tree status |
+| `git_add` | Stage files for commit |
+| `git_commit` | Commit with a custom message |
+| `git_push` | Push to remote **(Protected by Security Gate)** |
+| `git_pull` | Pull from remote |
+| `git_log` | View commit history |
+| `git_diff` | Show staged or unstaged diffs |
+| `git_branch` | List all branches |
+| `git_checkout` | Switch or create branches |
+| `git_stash` | Stash / unstash changes |
+| `git_reset` | Reset HEAD (soft, mixed, hard) |
+| `git_remote` | List configured remotes |
 
 ---
 
@@ -62,6 +97,7 @@ uv pip install -e .
 ```bash
 copy .env.example .env
 # Open .env and paste your Gemini API key
+# Optionally add GITHUB_TOKEN for private repo PR reviews
 ```
 
 ### 4. Test the server runs
@@ -75,7 +111,24 @@ You should see no errors — the server waits for MCP connections on stdio.
 ## 🔌 MCP Configuration
 
 ### Antigravity (VS Code)
-Add to your `.gemini/settings.json` or MCP config file:
+Add to your `.gemini/settings.json`:
+```json
+{
+  "mcpServers": {
+    "devguardian": {
+      "command": "uv",
+      "args": ["--directory", "C:\\Users\\ASUS\\OneDrive\\Desktop\\DevGuardian", "run", "devguardian"],
+      "env": {
+        "GEMINI_API_KEY": "your_key_here",
+        "GITHUB_TOKEN": "your_github_token_here"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop
+Add to `%APPDATA%\Claude\claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
@@ -94,42 +147,62 @@ Add to your `.gemini/settings.json` or MCP config file:
 
 ## 💡 Usage Examples
 
-### Debug an error (Project-Aware)
-> "DevGuardian, debug the AttributeError I'm seeing in my flask app."
-→ DevGuardian reads your file tree, finds the offending class, and fixes the bug matching your specific project style.
+### 🤖 Agent Swarm — Build a feature with 3 AI agents
+> "DevGuardian, use the agent swarm to create a rate-limiting utility for our API."  
+→ Coder writes a `RateLimiter` class, Tester finds 5 edge cases, Reviewer incorporates all fixes and returns the final production-ready file.
 
-### Push Code (Safely)
-> "Push changes to main."
-→ DevGuardian scans your staged files. If you accidentally left `api_key = "AIzaSy..."` inside a file, DevGuardian BLOCKS the push and warns you to remove it.
+### 🧪 TDD Auto-Pilot — Test-driven bug fixing
+> "Run test_and_fix on `devguardian/tools/debugger.py`"  
+→ DevGuardian writes pytest tests, runs them, reads the failures, patches the source, and loops until all tests go green.
 
-### Smart commit
-> "Commit my changes."
-→ DevGuardian runs `git add .`, scans for leaks, Gemini writes the commit message based on the diff, and the commit is saved.
+### 🌐 GitHub PR Review — Review any live PR
+> "Review PR #42 in myorg/myrepo"  
+→ DevGuardian fetches the diff from GitHub and gives you a structured review: Bugs, Security, Performance, Style, and a final verdict.
 
-### Autonomous Engineering
-> "Implement a new database endpoint to fetch users."
-→ DevGuardian starts a LangGraph loop, analyzes the existing database files, writes the new code, and ensures it doesn't break existing tests.
+### 🐳 Dockerize a project in seconds
+> "Dockerize this project."  
+→ DevGuardian reads your stack from `pyproject.toml`, generates a multi-stage `Dockerfile` and `docker-compose.yml`, and writes them to your project root.
+
+### 🏗️ Mass Refactoring
+> "Add type hints to all function signatures in the project."  
+→ DevGuardian scans every `.py` file, rewrites functions that need type hints, and reports all 14 files it modified.
+
+### 🛡️ Push Code Safely
+> "Push my changes to main."  
+→ DevGuardian scans all staged files. If it finds `api_key = "AIzaSy..."` hardcoded anywhere, it **BLOCKS the push** and tells you exactly which file and line contains the secret.
 
 ---
 
 ## 📁 Project Structure
 ```
 DevGuardian/
-├── .env.example          ← Copy to .env, add your API key
-├── .gitignore
-├── pyproject.toml        ← UV project config (dependencies)
+├── .env.example              ← Copy to .env, add your API key
+├── .gitignore                ← Comprehensive security-focused rules
+├── pyproject.toml            ← UV project config (dependencies)
+├── Dockerfile                ← 🐳 Auto-generated production container
+├── docker-compose.yml        ← 🐳 Auto-generated service orchestration
 ├── README.md
+├── tests/
+│   └── test_debugger.py      ← 🧪 TDD Auto-Pilot generated tests
+├── .github/
+│   └── workflows/
+│       └── ci.yml            ← 🚀 Auto-generated GitHub Actions CI/CD
 └── devguardian/
-    ├── server.py         ← Robust MCP server entry point (20+ tools, global try/except, live logging)
+    ├── server.py             ← Robust MCP server (27 tools, logging, error handling)
     ├── agents/
-    │   └── engineer.py       ← Stateful Langgraph agent
+    │   ├── engineer.py       ← Single stateful LangGraph agent
+    │   └── swarm.py          ← 🤖 3-Agent Swarm (Coder + Tester + Reviewer)
     ├── tools/
-    │   ├── debugger.py       ← debug_error 
+    │   ├── debugger.py       ← debug_error
     │   ├── code_helper.py    ← explain, review, generate, improve
-    │   └── git_ops.py        ← Git commands + ⭐smart_commit 
+    │   ├── git_ops.py        ← Full git suite + ⭐ smart_commit
+    │   ├── tdd.py            ← 🧪 TDD Auto-Pilot
+    │   ├── github_review.py  ← 🌐 GitHub PR Reviewer
+    │   ├── infra.py          ← 🐳 Dockerfile + CI/CD generator
+    │   └── mass_refactor.py  ← 🏗️ God-Mode mass refactoring
     └── utils/
-        ├── gemini_client.py  ← Gemini 2.0 Flash wrapper
-        ├── file_reader.py    ← 🧠 Project DNA Context Builder 
+        ├── gemini_client.py  ← Gemini 2.0 Flash wrapper (lazy init)
+        ├── file_reader.py    ← 🧠 Project DNA Context Builder
         ├── security.py       ← 🛡️ Pre-push secret gate & .env validator
         └── memory.py         ← Threading & Agent state management
 ```
@@ -137,10 +210,21 @@ DevGuardian/
 ---
 
 ## 🔐 Enterprise-Grade Security
-- **Anti-Leak Shield:** `security.py` checks for over 20+ types of keys (AWS, GitHub, OpenAI, Google) before any `git push` or `smart_commit`.
-- **.env formatting:** `.env` validation ensures no placeholders or empty values are pushed to production by mistake.
-- **Local execution:** The server runs locally; your code never leaves your machine except for API calls to Gemini.
+
+- **Anti-Leak Shield**: `security.py` detects 20+ credential types (AWS, GitHub, OpenAI, Google, Stripe, Slack…) before any `git push` or `smart_commit`.
+- **Smart Detection**: Only flags **hardcoded quoted values** — never false-positives on `os.getenv()` calls.
+- **`.env` Safety**: `validate_env` reviews your `.env` file format — shows keys but **never exposes values**.
+- **Local Execution**: Your code never leaves your machine except for Gemini API calls.
 
 ---
 
-*Built with ❤️ by **Karan** using Gemini 2.0 Flash + MCP SDK + UV*
+## 🐳 Docker
+
+```bash
+# Build and run DevGuardian in a container
+docker compose up --build
+```
+
+---
+
+*Built with ❤️ by **Karan** using Gemini 2.0 Flash + LangGraph + MCP SDK + UV*
