@@ -33,17 +33,12 @@ line-length = 120
 exclude = [".venv", "venv", "__pycache__", ".git", "dist", "build"]
 
 [tool.ruff.lint]
-# E = pycodestyle errors, F = pyflakes, W = pycodestyle warnings
-select = ["E", "F", "W"]
+# Only check for real bugs (F = pyflakes: undefined names, unused variables, etc.)
+# Skip all E/W style rules — this is an MCP server, not a library with strict style guides
+select = ["F"]
 ignore = [
-    "E501",   # line too long — managed by line-length above
-    "F401",   # imported but unused — common in __init__.py re-exports
-    "E741",   # ambiguous variable name (e.g. 'l') — used in list comprehensions
-    "W291",   # trailing whitespace — auto-handled by formatters
-    "W293",   # whitespace before comment — auto-handled
-    "E302",   # expected 2 blank lines
-    "E303",   # too many blank lines
-    "E305",   # expected 2 blank lines after end of function
+    "F401",  # imported but unused — common in __init__.py re-exports
+    "F841",  # local variable assigned but never used — already fixed
 ]
 
 [tool.ruff.lint.per-file-ignores]

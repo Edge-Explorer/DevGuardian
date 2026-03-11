@@ -270,7 +270,7 @@ def check_gitignore(repo_path: str) -> dict:
     if result["missing"]:
         result["ok"] = False
         result["warnings"].append(
-            f"These patterns are missing from .gitignore: "
+            "These patterns are missing from .gitignore: "
             + ", ".join(f"`{p}`" for p in result["missing"])
         )
 
@@ -350,7 +350,6 @@ def pre_push_security_gate(repo_path: str) -> tuple[bool, str]:
         If safe=False, the push should be BLOCKED and the report shown to the user.
     """
     issues: list[str] = []
-    warnings: list[str] = []
     report_lines = ["## 🔐 DevGuardian Pre-Push Security Scan\n"]
 
     # ── Check 1: .gitignore coverage ─────────────────────────────────────────
