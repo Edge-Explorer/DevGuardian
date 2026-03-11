@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 🛠️ DevGuardian Engineering Agent (Stateful)
 Powered by LangGraph, LangChain, and SQLite.

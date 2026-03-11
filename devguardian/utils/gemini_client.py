@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 Gemini 2.0 Flash API client wrapper for DevGuardian.
 All AI interactions go through this single module.

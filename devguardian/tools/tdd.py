@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 🧪 TDD Auto-Pilot
 ==================

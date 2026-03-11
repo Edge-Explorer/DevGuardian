@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 Code helper tool — explain, review, generate, and improve code via Gemini.
 

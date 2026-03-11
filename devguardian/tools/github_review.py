@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 🌐 GitHub PR Reviewer
 ======================

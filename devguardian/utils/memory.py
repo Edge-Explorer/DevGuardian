@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 💾 DevGuardian Memory Utility
 Manages SQLite persistence for LangGraph agents.

@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 🤖 DevGuardian Agent Swarm
 ===========================
@@ -44,7 +45,7 @@ def _get_llm(temperature: float = 0.2) -> ChatGoogleGenerativeAI:
     )
 
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------及ひ-------------------------------------
 # Node: Load Project DNA (runs once at start)
 # ---------------------------------------------------------------------------
 def load_dna(state: SwarmState) -> SwarmState:

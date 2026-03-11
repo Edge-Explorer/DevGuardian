@@ -1,3 +1,4 @@
+# 🛡️ DevGuardian Project — Core Module
 """
 Debug tool — sends error messages / stack traces to Gemini and returns a fix.
 
@@ -44,7 +45,7 @@ def debug_error(
     """
     ctx = ""
     if project_path:
-        ctx = f"\n\n{build_project_context(project_path, code=code_snippet)}\n"
+        ctx = f"\n\n🛡️ DevGuardian — Project Context:\n{build_project_context(project_path, code_snippet)}\n"
 
     lang_hint = f"Language: {language}\n" if language else ""
 
