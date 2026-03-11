@@ -83,7 +83,7 @@ def coder_agent(state: SwarmState) -> SwarmState:
         **state,
         "code_draft": code,
         "messages": state.get("messages", []) + [
-            HumanMessage(content=f"[Coder produced draft code]")
+            HumanMessage(content="[Coder produced draft code]")
         ],
     }
 

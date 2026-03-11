@@ -60,7 +60,7 @@ def mass_refactor(project_path: str, instruction: str) -> str:
     errors = []
 
     report_parts = [
-        f"## 🏗️ Mass Refactor Report\n",
+        "## 🏗️ Mass Refactor Report\n",
         f"**Instruction:** `{instruction}`\n",
         f"**Scanning {len(all_py_files)} Python files...**\n\n",
     ]
