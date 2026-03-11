@@ -21,14 +21,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install uv
-          uv pip install -e .[cli] --all-extras
+          uv pip install --system -e .
       - name: Lint with ruff
         run: |
-          uv pip install ruff
+          uv pip install --system ruff
           ruff check .
       - name: Format with ruff
         run: |
-          ruff format .
+          ruff format . --check
 
   test:
     runs-on: ubuntu-latest
@@ -42,10 +42,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install uv
-          uv pip install -e .[cli] --all-extras
+          uv pip install --system -e .
       - name: Install pytest and pytest-cov
         run: |
-          uv pip install pytest pytest-cov
+          uv pip install --system pytest pytest-cov
       - name: Run tests with pytest
         run: |
           pytest --cov=devguardian --cov-report term-missing
@@ -62,10 +62,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install hatchling
+          pip install build
       - name: Build package
         run: |
-          python -m hatchling build
+          python -m build
 
   docker:
     runs-on: ubuntu-latest
