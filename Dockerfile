@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir uv
 
 # Copy only the dependency manifest first (cache-friendly layer)
 COPY pyproject.toml .
+COPY README.md .
 
 # Install project deps into a proper venv using uv
 RUN uv venv /app/.venv && \
