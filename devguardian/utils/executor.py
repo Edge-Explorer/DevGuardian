@@ -9,47 +9,40 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+
 def execute_python_snippet(code: str, timeout: int = 5) -> dict:
     """
     Executes a Python snippet and returns the result/errors.
     """
-    with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode='w', encoding='utf-8') as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w", encoding="utf-8") as tmp:
         tmp.write(code)
         tmp_path = Path(tmp.name)
 
     try:
         # Run with current python executable
         result = subprocess.run(
-            [sys.executable, str(tmp_path)],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            stdin=subprocess.DEVNULL
+            [sys.executable, str(tmp_path)], capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL
         )
-        
+
         return {
             "success": result.returncode == 0,
             "stdout": result.stdout[:2000],
             "stderr": result.stderr[:2000],
-            "exit_code": result.returncode
+            "exit_code": result.returncode,
         }
     except subprocess.TimeoutExpired:
         return {
             "success": False,
             "stdout": "",
             "stderr": f"Execution timed out after {timeout} seconds.",
-            "exit_code": -1
+            "exit_code": -1,
         }
     except Exception as e:
-        return {
-            "success": False,
-            "stdout": "",
-            "stderr": str(e),
-            "exit_code": -1
-        }
+        return {"success": False, "stdout": "", "stderr": str(e), "exit_code": -1}
     finally:
         if tmp_path.exists():
             tmp_path.unlink()
+
 
 def verify_code_logic(code: str) -> str:
     """

@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 
+
 class ProjectMemory:
     def __init__(self, project_path: str):
         self.root = Path(project_path)
@@ -34,11 +35,7 @@ class ProjectMemory:
 
     def add_lesson(self, task: str, finding: str):
         """Record a lesson learned from a specific task."""
-        self.data["lessons"].append({
-            "timestamp": datetime.now().isoformat(),
-            "task": task,
-            "finding": finding
-        })
+        self.data["lessons"].append({"timestamp": datetime.now().isoformat(), "task": task, "finding": finding})
         # Keep only last 10 lessons to prevent context bloat
         self.data["lessons"] = self.data["lessons"][-10:]
         self.save()
@@ -48,10 +45,10 @@ class ProjectMemory:
         parts = []
         if self.data["preferences"]:
             parts.append("### User Preferences\n- " + "\n- ".join(self.data["preferences"]))
-        
+
         if self.data["lessons"]:
             parts.append("### Recent Lessons Learned")
             for l in self.data["lessons"]:
                 parts.append(f"- Task: {l['task']}\n  Lesson: {l['finding']}")
-        
+
         return "\n\n".join(parts) if parts else "No specific project memory yet."

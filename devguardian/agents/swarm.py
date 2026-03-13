@@ -42,30 +42,32 @@ def _get_llm(temperature: float = 0.2) -> ChatGoogleGenerativeAI:
 # Nodes
 # ---------------------------------------------------------------------------
 
+
 def load_context(state: SwarmState) -> SwarmState:
     """Initialize project DNA and Semantic Memory."""
     dna = build_project_context(state["project_path"])
     mem = ProjectMemory(state["project_path"])
-    
+
     return {
         **state,
         "project_dna": dna,
         "memory_context": mem.get_context_string(),
         "iteration_count": 1,
         "reviewer_feedback": "",
-        "messages": state.get("messages", [])
+        "messages": state.get("messages", []),
     }
 
 
 def coder_agent(state: SwarmState) -> SwarmState:
     """Writes code, considering memory and previous reviewer rejections."""
     llm = _get_llm(temperature=0.3)
-    
+
     # Pillar 1: Adversarial Loop
     is_fix = len(state["reviewer_feedback"]) > 0
     mode_instruction = (
         f"FIX the following code based on reviewer feedback:\n{state['reviewer_feedback']}"
-        if is_fix else "Write the implementation from scratch."
+        if is_fix
+        else "Write the implementation from scratch."
     )
 
     system = SystemMessage(
@@ -88,21 +90,22 @@ def coder_agent(state: SwarmState) -> SwarmState:
 
     response: AIMessage = llm.invoke([system, user])
     code = response.content.strip()
-    
+
     if "```" in code:
         code = "\n".join([l for l in code.splitlines() if not l.strip().startswith("```")]).strip()
 
     return {
         **state,
         "code_draft": code,
-        "messages": state.get("messages", []) + [HumanMessage(content=f"[Coder produced draft v{state['iteration_count']}]")]
+        "messages": state.get("messages", [])
+        + [HumanMessage(content=f"[Coder produced draft v{state['iteration_count']}]")],
     }
 
 
 def tester_agent(state: SwarmState) -> SwarmState:
     """Audits code and RUNS it in a sandbox to catch real crashes."""
     llm = _get_llm(temperature=0.4)
-    
+
     # Pillar 3: Sandbox Execution
     execution_result = verify_code_logic(state["code_draft"])
 
@@ -125,7 +128,7 @@ def tester_agent(state: SwarmState) -> SwarmState:
     return {
         **state,
         "test_report": f"### Sandbox Result\n{execution_result}\n\n### Audit Notes\n{response.content.strip()}",
-        "messages": state.get("messages", []) + [HumanMessage(content="[Tester produced report]")]
+        "messages": state.get("messages", []) + [HumanMessage(content="[Tester produced report]")],
     }
 
 
@@ -147,13 +150,13 @@ def reviewer_agent(state: SwarmState) -> SwarmState:
             f"## Task\n{state['task']}\n\n"
             f"## Draft Code\n```python\n{state['code_draft']}\n```\n\n"
             f"## Tester Feedback\n{state['test_report']}\n\n"
-            "Decide: Is this production-ready? (Iteration: " + str(state['iteration_count']) + ")"
+            "Decide: Is this production-ready? (Iteration: " + str(state["iteration_count"]) + ")"
         )
     )
 
     response: AIMessage = llm.invoke([system, user])
     verdict_text = response.content.strip()
-    
+
     is_rejected = "REJECT" in verdict_text.upper() and state["iteration_count"] < 3
 
     return {
@@ -161,7 +164,7 @@ def reviewer_agent(state: SwarmState) -> SwarmState:
         "reviewer_feedback": verdict_text if is_rejected else "",
         "final_verdict": verdict_text,
         "iteration_count": state["iteration_count"] + 1,
-        "messages": state.get("messages", []) + [HumanMessage(content="[Reviewer verdict]")]
+        "messages": state.get("messages", []) + [HumanMessage(content="[Reviewer verdict]")],
     }
 
 
@@ -172,12 +175,12 @@ def router(state: SwarmState) -> Literal["coder", "end"]:
     """Determines if we should loop back or finish."""
     if state["reviewer_feedback"] and state["iteration_count"] <= 3:
         return "coder"
-    
+
     # Update Semantic Memory on success
     if "ACCEPTED" in state["final_verdict"].upper():
         mem = ProjectMemory(state["project_path"])
         mem.add_lesson(state["task"], "Code passed sandbox and adversarial review.")
-        
+
     return "end"
 
 
@@ -196,27 +199,15 @@ def create_swarm_graph():
     workflow.add_edge("load_context", "coder")
     workflow.add_edge("coder", "tester")
     workflow.add_edge("tester", "reviewer")
-    
-    workflow.add_conditional_edges(
-        "reviewer",
-        router,
-        {
-            "coder": "coder",
-            "end": END
-        }
-    )
+
+    workflow.add_conditional_edges("reviewer", router, {"coder": "coder", "end": END})
 
     return workflow.compile()
 
 
 async def run_swarm(task: str, project_path: str) -> str:
     graph = create_swarm_graph()
-    result = await graph.ainvoke({
-        "task": task,
-        "project_path": project_path,
-        "messages": [],
-        "iteration_count": 0
-    })
+    result = await graph.ainvoke({"task": task, "project_path": project_path, "messages": [], "iteration_count": 0})
 
     return (
         f"# 🤖 DevGuardian v3 Swarm Report\n\n"
