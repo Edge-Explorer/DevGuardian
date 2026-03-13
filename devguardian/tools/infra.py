@@ -139,6 +139,5 @@ def generate_gitignore(project_path: str, include_env: bool = False) -> str:
         f"Project: `{project_path}`\n"
         f"- ✅ Tailored to project structure\n"
         f"- ✅ Sensitive file check: {'Enabled' if include_env else 'Manual review requested'}\n\n"
-        f"```text\n{content[:800]}\n```\n"
-        + ("*(truncated — see file for full content)*" if len(content) > 800 else "")
+        f"```text\n{content[:800]}\n```\n" + ("*(truncated — see file for full content)*" if len(content) > 800 else "")
     )
