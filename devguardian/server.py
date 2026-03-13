@@ -36,7 +36,7 @@ from devguardian.tools.debugger import debug_error
 from devguardian.tools.code_helper import explain_code, review_code, generate_code, improve_code
 from devguardian.tools.tdd import test_and_fix
 from devguardian.tools.github_review import review_pull_request
-from devguardian.tools.infra import dockerize, generate_ci
+from devguardian.tools.infra import dockerize, generate_ci, generate_gitignore
 from devguardian.tools.mass_refactor import mass_refactor
 from devguardian.tools.git_ops import (
     git_status,
@@ -240,6 +240,24 @@ async def list_tools() -> list[types.Tool]:
                     "deploy_target": {
                         "type": "string",
                         "description": "e.g. 'docker', 'railway', 'heroku' (optional).",
+                    },
+                },
+                "required": ["project_path"],
+            },
+        ),
+        types.Tool(
+            name="generate_gitignore",
+            description=(
+                "🛡️ Smart .gitignore Generator: analyzes the project structure and "
+                "generates a tailored .gitignore file via AI."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_path": {"type": "string"},
+                    "include_env": {
+                        "type": "boolean",
+                        "description": "If true, explicitly include .env and credentials in the ignore list. (User Permission)",
                     },
                 },
                 "required": ["project_path"],
@@ -455,6 +473,8 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             return text(await _run_sync(dockerize, **arguments))
         elif name == "generate_ci":
             return text(await _run_sync(generate_ci, **arguments))
+        elif name == "generate_gitignore":
+            return text(await _run_sync(generate_gitignore, **arguments))
         elif name == "mass_refactor":
             return text(await _run_sync(mass_refactor, **arguments))
 

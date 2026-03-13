@@ -225,19 +225,49 @@ def scan_content_for_secrets(content: str, filename: str = "") -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# 4. .gitignore coverage checker
+# 4. .gitignore coverage checker & generator
 # ---------------------------------------------------------------------------
+
+
+def generate_smart_gitignore(project_path: str, include_env: bool = False) -> str:
+    """
+    Generate a tailored .gitignore for the project using Gemini and local context.
+    """
+    from devguardian.utils.file_reader import build_project_context
+    from devguardian.utils.gemini_client import ask_gemini
+
+    ctx = build_project_context(project_path)
+    env_msg = (
+        "ALWAYS include .env and credentials patterns."
+        if include_env
+        else "DO NOT explicitly include .env unless the user confirms (ask for permission). "
+        "Actually, for safety, suggest it but mark it with a comment."
+    )
+
+    prompt = (
+        f"{ctx}\n\n"
+        "Generate a professional, tailored .gitignore for this project. "
+        "1. Identify the programming language and frameworks.\n"
+        "2. Include common ignore patterns for that stack (e.g., __pycache__, node_modules, .venv, etc.).\n"
+        "3. Look at the file structure above and identify any specific large folders or temp files to ignore.\n"
+        f"4. Regarding .env: {env_msg}\n"
+        "\nReturn ONLY the content of the .gitignore file. No markdown fences, no explanations."
+    )
+
+    system_instr = (
+        "You are a DevOps architect. Generate a clean, well-organized .gitignore file. "
+        "Group patterns by category (e.g., # IDEs, # Environment, # Build artifacts)."
+    )
+
+    result = ask_gemini(prompt, system_instruction=system_instr)
+    # Strip fences if present
+    lines = [l for l in result.splitlines() if not l.strip().startswith("```")]
+    return "\n".join(lines).strip()
 
 
 def check_gitignore(repo_path: str) -> dict:
     """
     Check that .gitignore properly covers sensitive file patterns.
-
-    Returns:
-        ok       : bool  — True if all critical patterns are covered
-        covered  : list  — patterns that ARE in .gitignore
-        missing  : list  — patterns that should be in .gitignore but aren't
-        warnings : list  — human-readable warnings
     """
     root = Path(repo_path)
     gitignore_path = root / ".gitignore"
@@ -257,6 +287,7 @@ def check_gitignore(repo_path: str) -> dict:
         line.strip() for line in gitignore_content.splitlines() if line.strip() and not line.strip().startswith("#")
     }
 
+    # First check the high-priority "MUST IGNORE" list
     for pattern in _MUST_IGNORE:
         # Check exact match or wildcard coverage
         covered = (
@@ -272,7 +303,7 @@ def check_gitignore(repo_path: str) -> dict:
     if result["missing"]:
         result["ok"] = False
         result["warnings"].append(
-            "These patterns are missing from .gitignore: " + ", ".join(f"`{p}`" for p in result["missing"])
+            "These critical patterns are missing from .gitignore: " + ", ".join(f"`{p}`" for p in result["missing"])
         )
 
     return result

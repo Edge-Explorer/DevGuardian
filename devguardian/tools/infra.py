@@ -115,3 +115,30 @@ def generate_ci(project_path: str, deploy_target: str = "") -> str:
         f"```yaml\n{yaml_content[:1200]}\n```\n"
         + ("*(truncated — see file for full content)*" if len(yaml_content) > 1200 else "")
     )
+
+
+def generate_gitignore(project_path: str, include_env: bool = False) -> str:
+    """
+    Analyze the project and generate a tailored .gitignore.
+    """
+    from devguardian.utils.security import generate_smart_gitignore
+
+    content = generate_smart_gitignore(project_path, include_env=include_env)
+    root = Path(project_path)
+    gitignore_path = root / ".gitignore"
+
+    # Backup if it exists
+    if gitignore_path.exists():
+        backup = gitignore_path.with_suffix(".gitignore.bak")
+        gitignore_path.rename(backup)
+
+    gitignore_path.write_text(content, encoding="utf-8")
+
+    return (
+        f"## 🛡️ Smart .gitignore Generated!\n\n"
+        f"Project: `{project_path}`\n"
+        f"- ✅ Tailored to project structure\n"
+        f"- ✅ Sensitive file check: {'Enabled' if include_env else 'Manual review requested'}\n\n"
+        f"```text\n{content[:800]}\n```\n"
+        + ("*(truncated — see file for full content)*" if len(content) > 800 else "")
+    )
