@@ -50,6 +50,34 @@ jobs:
         run: |
           pytest --cov=devguardian --cov-report term-missing
 
+  repair:
+    name: 🩹 Self-Healing Repair
+    runs-on: ubuntu-latest
+    # Run only if lint/test fails AND we are on the main branch
+    if: failure() && github.ref == 'refs/heads/main'
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for push
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+          uv pip install --system -e .
+      - name: Run AI Repair
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv pip install --system pytest ruff pytest-cov langchain-google-genai langgraph
+          python devguardian/tools/self_healing.py
+
   build:
     runs-on: ubuntu-latest
     needs: [lint, test]
