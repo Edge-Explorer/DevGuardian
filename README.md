@@ -264,4 +264,4 @@ docker compose up --build
 
 ---
 
-*Built by Karan using Gemini 2.0 Flash, LangGraph, MCP SDK, and UV.*
+*Built by Karan using Gemini 2.0 Flash, LangGraph, MCP SDK, and UV*
