@@ -454,6 +454,8 @@ async def list_tools() -> list[types.Tool]:
 # ---------------------------------------------------------------------------
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
+    # 🕵️ Reload environment variables on every call to support hot-updating .env files
+    load_dotenv(override=True)
     logger.info(f"Tool called: {name}")
 
     def text(result) -> list[types.TextContent]:
