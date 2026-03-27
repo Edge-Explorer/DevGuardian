@@ -3,7 +3,7 @@
 > An AI-powered, project-aware coding assistant MCP server built with Gemini 2.0 Flash and UV.  
 > Plug it into Antigravity or Claude Desktop and get a full AI engineering team: debugging, reviewing, testing, deploying, and securing your code — all autonomously.
 
-![DevGuardian Demonstration](DevGuardian.mp4)
+![DevGuardian Demo](demo.gif)
 
 ---
 
